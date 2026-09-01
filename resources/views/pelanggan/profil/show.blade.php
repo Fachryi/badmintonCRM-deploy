@@ -7,11 +7,22 @@
 @section('topbar_actions')
     <span class="badge bg-primary rounded-pill px-3 py-2 shadow-sm d-inline-flex align-items-center gap-1.5">
         <i class="bi bi-person-badge-fill"></i>
-        <span>{{ $user->isMember() ? 'MEMBER (' . strtoupper(str_replace('_', ' ', $user->kategori_member)) . ')' : 'NON-MEMBER' }}</span>
-        @if($user->isMember() && $user->membership_expires_at)
-            <span class="badge bg-white text-primary rounded-pill ms-1" style="font-size:0.68rem; font-weight:700; padding: 2px 6px;">
-                Aktif s/d {{ $user->membership_expires_at->format('d/m/Y') }}
-            </span>
+        @if($user->isMember())
+            <span>MEMBER ({{ strtoupper(str_replace('_', ' ', $user->kategori_member)) }})</span>
+            @if($user->membership_expires_at)
+                <span class="badge bg-white text-primary rounded-pill ms-1" style="font-size:0.68rem; font-weight:700; padding: 2px 6px;">
+                    Aktif s/d {{ $user->membership_expires_at->format('d/m/Y') }}
+                </span>
+            @endif
+        @elseif($user->isMembershipExpired())
+            <span>MEMBER (KEDALUWARSA)</span>
+            @if($user->membership_expires_at)
+                <span class="badge bg-danger text-white rounded-pill ms-1" style="font-size:0.68rem; font-weight:700; padding: 2px 6px;">
+                    Expired {{ $user->membership_expires_at->format('d/m/Y') }}
+                </span>
+            @endif
+        @else
+            <span>NON-MEMBER</span>
         @endif
     </span>
 @endsection
@@ -1308,6 +1319,18 @@
                     @endif
                     <a href="{{ route('membership.index') }}" class="btn btn-xs btn-light w-100 rounded-pill py-1.5 fw-bold" style="font-size:.7rem;">
                         Lihat Keuntungan <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                @elseif($user->isMembershipExpired())
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="badge bg-danger rounded-pill" style="font-size:.6rem; letter-spacing:0.5px;">MEMBER KEDALUWARSA</span>
+                        <i class="bi bi-exclamation-triangle-fill text-warning fs-6"></i>
+                    </div>
+                    <h6 class="fw-bold mb-1" style="font-size: 0.85rem;">Masa Aktif Member Telah Habis</h6>
+                    <p class="mb-2 small" style="opacity: 0.85; font-size:.72rem;">
+                        Masa berlaku member Anda berakhir pada {{ $user->membership_expires_at ? $user->membership_expires_at->format('d M Y') : '-' }}. Perpanjang sekarang untuk menikmati kembali slot jadwal tetap dan keunggulannya.
+                    </p>
+                    <a href="{{ route('membership.index') }}" class="btn btn-xs btn-warning text-dark w-100 rounded-pill py-1.5 fw-bold" style="font-size:.7rem;">
+                        Perpanjang Member Sekarang <i class="bi bi-arrow-right ms-1"></i>
                     </a>
                 @else
                     <div class="d-flex align-items-center justify-content-between mb-2">

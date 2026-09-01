@@ -18,6 +18,10 @@
                     <span class="position-absolute top-0 end-0 m-3 badge text-uppercase" style="background:#fef3c7; color:#d97706; border:1px solid #fde68a; font-size: 0.72rem; font-weight: 700;">
                         <i class="bi bi-star-fill me-1"></i>Member ({{ str_replace('_', ' ', $pelanggan->kategori_member) }})
                     </span>
+                @elseif($pelanggan->isMembershipExpired())
+                    <span class="position-absolute top-0 end-0 m-3 badge bg-danger text-white text-uppercase" style="font-size: 0.72rem; font-weight: 700;">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>Member Kedaluwarsa
+                    </span>
                 @else
                     <span class="position-absolute top-0 end-0 m-3 badge bg-light text-secondary border">
                         Non-Member
@@ -74,6 +78,11 @@
                     <div class="mb-2">
                         <small class="text-muted d-block mb-1">Masa Aktif Member</small>
                         <span class="fw-bold text-success" style="font-size: 0.85rem;"><i class="bi bi-clock-history me-1"></i>{{ $pelanggan->membership_expires_at->format('d M Y') }} <small class="text-secondary fw-semibold">({{ $pelanggan->sisaHariAktifMember() }} hari lagi)</small></span>
+                    </div>
+                    @elseif($pelanggan->isMembershipExpired())
+                    <div class="mb-2">
+                        <small class="text-muted d-block mb-1">Masa Aktif Member</small>
+                        <span class="fw-bold text-danger" style="font-size: 0.85rem;"><i class="bi bi-clock-history me-1"></i>Telah Habis ({{ $pelanggan->membership_expires_at ? $pelanggan->membership_expires_at->format('d M Y') : '-' }})</span>
                     </div>
                     @endif
                     @if($pelanggan->nomor_hp)

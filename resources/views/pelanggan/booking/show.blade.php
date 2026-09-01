@@ -31,6 +31,15 @@
                             <span class="text-muted small">Status Booking</span>
                             <span class="badge badge-{{ $booking->status }} px-3 py-2 rounded-pill">{{ ucfirst($booking->status) }}</span>
                         </div>
+                        @if($booking->pembayaran && $booking->pembayaran->status_verifikasi === 'diverifikasi')
+                        <div class="mb-3 d-flex justify-content-between align-items-center py-2" style="border-bottom:1px solid #f1f5f9">
+                            <span class="text-muted small">Waktu Verifikasi Pembayaran</span>
+                            <span class="fw-600 text-dark">
+                                <i class="bi bi-check-circle-fill text-success me-1"></i>
+                                {{ ($booking->pembayaran->verified_at ?? $booking->pembayaran->updated_at)->format('d M Y, H:i') }} WITA
+                            </span>
+                        </div>
+                        @endif
                         <div class="mb-3 d-flex justify-content-between py-2" style="border-bottom:1px solid #f1f5f9">
                             <span class="text-muted small">Lapangan</span>
                             <span class="fw-600">{{ $booking->lapangan->nama_lapangan }}</span>
@@ -174,10 +183,16 @@
                                 <small class="text-muted">Metode</small>
                                 <span class="fw-500">{{ ucfirst($booking->pembayaran->metode_pembayaran) }}</span>
                             </div>
-                            <div class="d-flex justify-content-between">
+                            <div class="d-flex justify-content-between {{ $booking->pembayaran->status_verifikasi === 'diverifikasi' ? 'mb-2' : '' }}">
                                 <small class="text-muted">Jumlah Bayar</small>
                                 <span class="fw-bold text-success">Rp {{ number_format($booking->pembayaran->jumlah_bayar, 0, ',', '.') }}</span>
                             </div>
+                            @if($booking->pembayaran->status_verifikasi === 'diverifikasi')
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">Diverifikasi Pada</small>
+                                <span class="fw-bold text-dark">{{ ($booking->pembayaran->verified_at ?? $booking->pembayaran->updated_at)->format('d M Y, H:i') }} WITA</span>
+                            </div>
+                            @endif
                         </div>
                         @if($booking->pembayaran->bukti_pembayaran)
                         <a href="{{ asset('storage/' . $booking->pembayaran->bukti_pembayaran) }}"

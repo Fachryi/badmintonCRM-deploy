@@ -183,7 +183,7 @@ class ProfilController extends Controller
             ->where(function ($q) {
                 $q->where('status_verifikasi', 'menunggu')
                   ->orWhereHas('user', function ($qu) {
-                      $qu->whereIn('kategori_member', ['member', 'weekday_pagi', 'weekday_malam', 'weekend']);
+                      $qu->activeMember();
                   });
             })
             ->first();
@@ -312,7 +312,7 @@ class ProfilController extends Controller
             ->where(function ($q) {
                 $q->where('status_verifikasi', 'menunggu')
                   ->orWhereHas('user', function ($qu) {
-                      $qu->whereIn('kategori_member', ['member', 'weekday_pagi', 'weekday_malam', 'weekend']);
+                      $qu->activeMember();
                   });
             })
             ->first();

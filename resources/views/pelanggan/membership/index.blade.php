@@ -114,6 +114,14 @@
                             <span class="btn btn-warning btn-lg rounded-pill px-5 fw-bold shadow-sm" style="pointer-events: none;">
                                 <i class="bi bi-gemini me-2"></i>Status: Member Premium Aktif
                             </span>
+                        @elseif(auth()->user()->isMembershipExpired())
+                            <h2 class="fw-800 mb-3 text-warning" style="font-size: 2.5rem;"><i class="bi bi-exclamation-triangle-fill me-2"></i>Masa Aktif Member Telah Habis</h2>
+                            <p class="text-muted-light mb-4" style="color: #cbd5e1; font-size: 1.1rem;">
+                                Masa berlaku member Anda berakhir pada <strong>{{ auth()->user()->membership_expires_at ? auth()->user()->membership_expires_at->format('d M Y') : '-' }}</strong>. Perpanjang membership Anda sekarang untuk kembali mengaktifkan hak istimewa member.
+                            </p>
+                            <a href="#pembayaran-section" class="btn btn-warning btn-lg text-dark rounded-pill px-5 fw-bold shadow-sm">
+                                <i class="bi bi-arrow-repeat me-2"></i>Perpanjang Member Sekarang
+                            </a>
                         @else
                             <h2 class="fw-800 mb-3" style="font-size: 2.5rem;">Upgrade ke Member & Nikmati Keuntungannya!</h2>
                             <p class="text-muted-light mb-4" style="color: #94a3b8; font-size: 1.1rem;">

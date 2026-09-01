@@ -220,7 +220,11 @@ class BookingProcessTest extends TestCase
         ]);
 
         $response->assertSessionHas('error');
-        $this->assertStringContainsString('Jadwal bentrok', session('error'));
+        $errorMsg = session('error');
+        $this->assertTrue(
+            str_contains($errorMsg, 'Jadwal bentrok') || str_contains($errorMsg, 'dipesan oleh pengguna lain'),
+            "Session error message did not match expected conflict text: {$errorMsg}"
+        );
     }
 
     public function test_public_schedule_displays_member_slots_as_dipesan()

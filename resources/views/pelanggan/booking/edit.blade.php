@@ -272,7 +272,7 @@ function hitungTotal() {
     if (lapangan.value && tanggal.value && jamMulai.value && jamSelesai.value) {
         const option = lapangan.options[lapangan.selectedIndex];
         const date = new Date(tanggal.value);
-        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        const isWeekend = date.getUTCDay() === 0 || date.getUTCDay() === 6;
         const hargaPerJam = isWeekend ? parseInt(option.dataset.weekend) : parseInt(option.dataset.weekday);
         
         let mulai = parseInt(jamMulai.value.split(':')[0]);
@@ -384,7 +384,7 @@ function updateHargaBadgeEdit() {
     const hargaWeekday = parseInt(opt.dataset.weekday);
     const hargaWeekend = parseInt(opt.dataset.weekend);
     const date = new Date(tanggalInput.value);
-    const day = date.getDay();
+    const day = date.getUTCDay();
     const isWeekend = (day === 0 || day === 6);
 
     const harga = isWeekend ? hargaWeekend : hargaWeekday;

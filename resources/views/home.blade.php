@@ -79,7 +79,9 @@
 
         /* ══ HERO ══ */
         .hero {
-            min-height: 100vh; display: flex; align-items: center;
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding-top: var(--navbar-height, 72px); box-sizing: border-box;
             position: relative; overflow: hidden; background: var(--navy);
         }
         .hero-bg {
@@ -105,6 +107,8 @@
         }
         .hero .inner {
             position: relative; z-index: 2; width: 100%;
+            margin: auto 0;
+            padding: 1.5rem 0;
         }
         .hero-eyebrow {
             display: inline-flex; align-items: center; gap: .5rem;
@@ -132,14 +136,14 @@
             text-shadow: 0 4px 20px rgba(0,0,0,.4);
             animation: fadeUp .7s .1s ease both;
             text-align: center;
-            margin-bottom: 1.75rem !important;
+            margin-bottom: 1.25rem !important;
         }
         .hero h1 .accent { color: var(--sky); }
         .hero-sub {
             color: rgba(255,255,255,.7); font-size: 1.12rem; font-weight: 500;
             max-width: 680px; line-height: 1.8;
             animation: fadeUp .7s .2s ease both;
-            margin: 0 auto 2.5rem auto;
+            margin: 0 auto 1.75rem auto;
             text-align: center;
         }
         .hero-actions { 
@@ -148,7 +152,7 @@
             justify-content: center;
             flex-wrap: wrap;
             gap: 1.25rem;
-            margin-bottom: 4rem !important;
+            margin-bottom: 2.25rem !important;
         }
         .btn-primary-hero {
             background: linear-gradient(135deg, var(--blue), var(--sky));
@@ -241,12 +245,46 @@
             border: 1.5px solid var(--s200);
             background: #fff; height: 100%;
             transition: all .3s cubic-bezier(.34,1.56,.64,1);
+            display: flex;
+            flex-direction: column;
         }
         .court-card:hover { transform: translateY(-6px); box-shadow: 0 20px 48px rgba(0,0,0,.1); border-color: transparent; }
+        .court-img-wrapper {
+            position: relative; height: 145px; overflow: hidden; cursor: pointer;
+            background: var(--navy);
+        }
+        .court-img-wrapper img {
+            width: 100%; height: 100%; object-fit: cover; object-position: bottom;
+            transition: transform .5s cubic-bezier(.16,1,.3,1);
+        }
+        .court-card:hover .court-img-wrapper img {
+            transform: scale(1.08);
+        }
+        .court-img-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.2) 60%, transparent 100%);
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 1rem; color: #fff;
+        }
+        .court-zoom-btn {
+            align-self: center; margin-top: auto; margin-bottom: auto;
+            background: rgba(15,23,42,0.75); backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.35); color: #fff;
+            padding: .45rem 1.25rem; border-radius: 50px; font-size: .8rem; font-weight: 700;
+            opacity: 0; transform: translateY(10px); transition: all .3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: inline-flex; align-items: center; justify-content: center; gap: .5rem; white-space: nowrap;
+        }
+        .court-card:hover .court-zoom-btn {
+            opacity: 1; transform: translateY(0);
+        }
+        .court-zoom-btn:hover {
+            background: var(--blue); border-color: var(--blue); color: #fff;
+        }
         .court-header {
-            padding: 1.5rem;
-            background: linear-gradient(135deg, var(--navy), #1e3a5f);
-            position: relative; overflow: hidden; min-height: 100px;
+            padding: 1.25rem 1.5rem;
+            background: var(--navy);
+            position: relative; overflow: hidden;
         }
         .court-header::after {
             content: '🏸';
@@ -275,21 +313,114 @@
 
         /* ══ KELENGKAPAN ══ */
         .item-gear {
-            display: flex; align-items: center; gap: .75rem;
-            background: var(--s50); border: 1.5px solid var(--s200);
-            border-radius: 14px; padding: .85rem 1rem;
-            transition: all .25s;
+            display: flex; align-items: center; gap: .55rem;
+            background: #fff; border: 1.5px solid var(--s200);
+            border-radius: 11px; padding: .48rem .75rem;
+            transition: all .25s; position: relative;
         }
-        .item-gear:hover { border-color: var(--blue-l); background: #eff6ff; transform: translateX(4px); }
+        .item-gear:hover { border-color: var(--blue-l); background: #eff6ff; transform: translateX(3px); }
+        .item-gear.gear-link { cursor: pointer; }
+        .item-gear.gear-link::after {
+            content: '\2192'; position: absolute; right: .65rem;
+            font-size: .75rem; color: var(--blue-l); opacity: 0; transition: opacity .2s;
+        }
+        .item-gear.gear-link:hover::after { opacity: 1; }
+        .item-gear.gear-link.active-slide {
+            border-color: var(--blue); background: #eff6ff;
+            box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+        }
+        .item-gear.gear-link.active-slide::after { opacity: 1; color: var(--blue); }
         .item-gear .icon-wrap {
-            width: 44px; height: 44px; flex-shrink: 0;
-            background: #fff; border-radius: 12px;
+            width: 34px; height: 34px; flex-shrink: 0;
+            background: var(--s50); border-radius: 9px;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,.07); font-size: 1.2rem;
+            box-shadow: inset 0 0 0 1px var(--s200); font-size: 1rem;
             color: var(--blue);
         }
-        .item-gear .name { font-size: .83rem; font-weight: 700; color: var(--navy); }
-        .item-gear .price { font-size: .78rem; font-weight: 600; color: var(--blue); }
+        .item-gear .name { font-size: .78rem; font-weight: 700; color: var(--navy); line-height: 1.2; }
+        .item-gear .price { font-size: .71rem; font-weight: 600; color: var(--blue); line-height: 1.2; }
+
+        /* 3D Carousel */
+        .c3d-scene {
+            perspective: 1000px;
+            height: 370px;
+            position: relative;
+            overflow: visible;
+        }
+        .card3d {
+            position: absolute; top: 0;
+            width: 82%; height: 100%;
+            left: 50%; border-radius: 20px; overflow: hidden;
+            transition: all .5s cubic-bezier(.25,.46,.45,.94);
+            box-shadow: 0 16px 48px rgba(0,0,0,.15);
+            backface-visibility: hidden;
+        }
+        .card3d img {
+            width: 100%; height: 100%; object-fit: cover;
+            object-position: center; display: block;
+        }
+        .card3d .c3d-cap {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 2.2rem 1.15rem .75rem;
+            background: linear-gradient(to top, rgba(0,0,0,.75) 0%, transparent 100%);
+            color: #fff;
+        }
+        .card3d .c3d-cap .cap-t { font-size: .92rem; font-weight: 800; margin-bottom: .15rem; }
+        .card3d .c3d-cap .cap-d { font-size: .72rem; opacity: .88; }
+        .c3d-empty {
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            color: var(--navy); text-align: center; padding: 1.5rem;
+        }
+        .c3d-empty .empty-icon {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: #fff; display: flex; align-items: center; justify-content: center;
+            font-size: 1.7rem; box-shadow: 0 4px 14px rgba(0,0,0,.06);
+            margin-bottom: .6rem;
+        }
+        .c3d-empty .empty-title { font-size: .98rem; font-weight: 800; color: var(--navy); }
+        .c3d-empty .empty-sub { font-size: .74rem; color: var(--n600); margin-top: .15rem; }
+        .card3d.c-active {
+            transform: translateX(-50%) translateZ(0) rotateY(0deg) scale(1);
+            z-index: 10; opacity: 1; filter: none;
+        }
+        .card3d.c-prev {
+            transform: translateX(-78%) translateZ(-90px) rotateY(24deg) scale(0.85);
+            z-index: 5; opacity: .4; filter: brightness(.75);
+        }
+        .card3d.c-next {
+            transform: translateX(-22%) translateZ(-90px) rotateY(-24deg) scale(0.85);
+            z-index: 5; opacity: .4; filter: brightness(.75);
+        }
+        .card3d.c-hidden {
+            transform: translateX(-50%) translateZ(-280px) scale(0.5);
+            z-index: 0; opacity: 0; pointer-events: none;
+        }
+        .c3d-nav {
+            display: flex; justify-content: center; align-items: center;
+            gap: .75rem; margin-top: 1.1rem;
+        }
+        .c3d-btn {
+            width: 34px; height: 34px; border-radius: 50%;
+            border: 1.5px solid var(--s200); background: #fff;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all .2s; color: var(--navy);
+            font-size: .85rem; outline: none;
+        }
+        .c3d-btn:hover { background: var(--blue); border-color: var(--blue); color: #fff; transform: scale(1.06); }
+        .c3d-dots { display: flex; gap: .4rem; align-items: center; }
+        .c3d-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--s200); cursor: pointer; transition: all .25s;
+        }
+        .c3d-dot.active { background: var(--blue); width: 20px; border-radius: 4px; }
+        .c3d-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--s200); cursor: pointer; transition: all .25s;
+        }
+        .c3d-dot.active { background: var(--blue); width: 22px; border-radius: 4px; }
 
         /* Social pills */
         .social-pill {
@@ -505,7 +636,9 @@
         /* Naikkan sedikit seluruh kartu lapangan dan judul agar lebih fit di layar */
         section#lapangan > .container {
             position: relative;
-            top: -2.5rem;
+            top: 0;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
         }
 
         /* ══ RESPONSIVE ══ */
@@ -700,21 +833,16 @@
 
     <div class="inner">
         <div class="container">
-            <div class="row align-items-center justify-content-center g-5 py-5" style="padding-top:90px!important">
+            <div class="row align-items-center justify-content-center">
                 <div class="col-lg-10 col-xl-9 mx-auto text-center">
-                    <div class="hero-eyebrow mb-3">
-                        <span class="dot"></span>
-                        Booking Online — Cepat &amp; Mudah
-                    </div>
-                    <h1 class="mb-3">
+                    <h1>
                         Lapangan Bulutangkis<br>
                         <span class="accent">Anbiyaa Sport</span>
                     </h1>
-                    <p class="hero-sub mb-4 mx-auto">
-                        Lihat jadwal real-time, pilih slot favorit, dan konfirmasi booking dalam hitungan detik.
-                        Tanpa antri, tanpa ribet — dari mana saja.
+                    <p class="hero-sub mx-auto">
+                        Cek ketersediaan jadwal secara real-time, amankan slot favoritmu dalam hitungan detik, dan nikmati kemudahan main badminton tanpa antri &amp; bebas bentrok!
                     </p>
-                    <div class="hero-actions d-flex gap-3 flex-wrap justify-content-center mb-5">
+                    <div class="hero-actions d-flex gap-3 flex-wrap justify-content-center">
                         @auth
                             @if(auth()->user()->isAdmin())
                                 <a href="{{ route('admin.dashboard') }}" class="btn-primary-hero">
@@ -816,10 +944,9 @@
 {{-- ══ LAPANGAN ══ --}}
 <section id="lapangan" style="background:#fff;">
     <div class="container">
-        <div class="text-center mb-5 reveal">
-            <div class="section-pill">Fasilitas</div>
-            <h2 class="section-h">Lapangan Tersedia</h2>
-            <p class="section-sub">Pilih lapangan sesuai kebutuhan dan budget Anda</p>
+        <div class="text-center mb-3 reveal">
+            <div class="section-pill mb-1">Fasilitas Lapangan Tersedia</div>
+            <p class="section-sub mb-0">Pilih lapangan favorit Anda dengan fasilitas berkualitas dan kenyamanan terbaik</p>
         </div>
         <div class="row g-4 justify-content-center">
             @forelse($lapangans as $l)
@@ -830,15 +957,30 @@
             @endphp
             <div class="col-md-6 col-lg-4 reveal">
                 <div class="court-card {{ !$isAktif ? 'opacity-65' : '' }}">
+                    {{-- Court Image Header --}}
+                    <div class="court-img-wrapper" onclick="openCourtPhotoModal('{{ $l->nama_lapangan }}', '{{ $l->foto_url }}', '{{ addslashes($l->deskripsi ?? 'Lapangan badminton berkualitas tinggi dengan karpet standar PBSI, pencahayaan LED terang anti-silau, dan sirkulasi udara yang nyaman.') }}', 'Rp {{ number_format($l->harga_weekday, 0, ',', '.') }}', 'Rp {{ number_format($l->harga_weekend, 0, ',', '.') }}', '{{ route('booking.index', ['lapangan_id' => $l->id]) }}', {{ $isAktif ? 'true' : 'false' }})">
+                        <img src="{{ $l->foto_url }}" alt="{{ $l->nama_lapangan }}">
+                        <div class="court-img-overlay">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-dark bg-opacity-75 backdrop-blur px-2.5 py-1 rounded-pill" style="font-size: .68rem; border: 1px solid rgba(255,255,255,0.2);">
+                                    <i class="bi bi-shield-check text-success me-1"></i>PBSI Standard
+                                </span>
+                                @unless($isAktif)
+                                    <div class="court-ribbon"><i class="bi bi-slash-circle me-1"></i>Nonaktif</div>
+                                @endunless
+                            </div>
+                            <button type="button" class="court-zoom-btn">
+                                <i class="bi bi-arrows-angle-expand me-1.5"></i>Lihat Foto Lapangan
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="court-header {{ !$isAktif ? 'inactive' : '' }}">
-                        @unless($isAktif)
-                            <div class="court-ribbon"><i class="bi bi-slash-circle me-1"></i>Tidak Aktif</div>
-                        @endunless
-                        <div>
-                            <h5 class="text-white fw-bold mb-1">{{ $l->nama_lapangan }}</h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="text-white fw-bold mb-0">{{ $l->nama_lapangan }}</h5>
                             @if($isAktif)
                                 <div class="court-badge-aktif">
-                                    <i class="bi bi-circle-fill" style="font-size:.45rem"></i> Aktif Beroperasi
+                                    <i class="bi bi-circle-fill" style="font-size:.45rem"></i> Aktif
                                 </div>
                             @else
                                 <span style="background:rgba(0,0,0,.2);color:#d1d5db;font-size:.72rem;padding:.2rem .6rem;border-radius:50px">
@@ -847,13 +989,27 @@
                             @endif
                         </div>
                     </div>
-                    <div class="p-4">
-                        <p class="text-muted mb-3" style="font-size:.88rem; line-height:1.6">
+                    <div class="p-3 d-flex flex-column flex-grow-1">
+                        <p class="text-muted mb-2" style="font-size:.84rem; line-height:1.5">
                             {{ $l->deskripsi ?? 'Lapangan standar bulutangkis berkualitas dengan fasilitas lengkap.' }}
                         </p>
+
+                        {{-- Facility Specs Chips --}}
+                        <div class="d-flex flex-wrap gap-1.5 mb-2">
+                            <span class="badge bg-light text-secondary border px-2 py-1 rounded-3" style="font-size:.7rem; font-weight:600;">
+                                <i class="bi bi-layers-fill text-primary me-1"></i> Karpet Vinyl
+                            </span>
+                            <span class="badge bg-light text-secondary border px-2 py-1 rounded-3" style="font-size:.7rem; font-weight:600;">
+                                <i class="bi bi-lightbulb-fill text-warning me-1"></i> LED Anti-Silau
+                            </span>
+                            <span class="badge bg-light text-secondary border px-2 py-1 rounded-3" style="font-size:.7rem; font-weight:600;">
+                                <i class="bi bi-wind text-info me-1"></i> Sirkulasi Udara
+                            </span>
+                        </div>
+
                         @if($isAktif)
-                        <div class="mb-3 pb-3" style="border-bottom:1px solid var(--s100)">
-                            <div style="font-size:.72rem; color:var(--s400); font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-bottom:.4rem">
+                        <div class="mb-2 pb-2 mt-auto" style="border-bottom:1px solid var(--s100)">
+                            <div style="font-size:.7rem; color:var(--s400); font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-bottom:.2rem">
                                 Harga {{ $isWeekend ? 'Weekend' : 'Weekday' }}
                             </div>
                             <div class="court-price-tag">
@@ -866,24 +1022,32 @@
                                 Weekend: Rp {{ number_format($l->harga_weekend,0,',','.') }}
                             </div>
                         </div>
+                        @else
+                        <div class="mt-auto"></div>
                         @endif
-                        <div class="d-flex gap-2">
+
+                        <div class="d-flex gap-1.5 flex-wrap">
+                            <button type="button" 
+                                    onclick="openCourtPhotoModal('{{ $l->nama_lapangan }}', '{{ $l->foto_url }}', '{{ addslashes($l->deskripsi ?? 'Lapangan badminton berkualitas tinggi dengan karpet standar PBSI, pencahayaan LED terang anti-silau, dan sirkulasi udara yang nyaman.') }}', 'Rp {{ number_format($l->harga_weekday, 0, ',', '.') }}', 'Rp {{ number_format($l->harga_weekend, 0, ',', '.') }}', '{{ route('booking.index', ['lapangan_id' => $l->id]) }}', {{ $isAktif ? 'true' : 'false' }})"
+                                    class="btn btn-sm btn-light border text-dark fw-600 rounded-pill px-2.5" style="font-size:.78rem;" title="Lihat Foto Detail">
+                                <i class="bi bi-image me-1 text-primary"></i>Foto
+                            </button>
                             <a href="{{ route('jadwal.show', $l->id) }}"
-                               class="btn btn-outline-primary rounded-pill px-3 fw-600" style="font-size:.83rem; flex:1; text-align:center">
-                                <i class="bi bi-calendar3 me-1"></i>Lihat Jadwal
+                               class="btn btn-sm btn-outline-primary rounded-pill px-2.5 fw-600" style="font-size:.78rem; flex:1; text-align:center">
+                                <i class="bi bi-calendar3 me-1"></i>Jadwal
                             </a>
                             @if($isAktif)
                                 @auth
                                     @if(auth()->user()->isPelanggan())
                                         <a href="{{ route('booking.index', ['lapangan_id' => $l->id]) }}"
-                                           class="btn btn-primary rounded-pill px-3 fw-700" style="font-size:.83rem;">
+                                           class="btn btn-sm btn-primary rounded-pill px-3 fw-700" style="font-size:.78rem;">
                                             <i class="bi bi-calendar-plus me-1"></i>Booking
                                         </a>
                                     @endif
                                 @endauth
                             @else
-                                <button class="btn btn-secondary rounded-pill px-3 disabled" disabled style="font-size:.83rem">
-                                    <i class="bi bi-lock-fill me-1"></i>Nonaktif
+                                <button class="btn btn-sm btn-secondary rounded-pill px-2.5 disabled" disabled style="font-size:.78rem">
+                                    <i class="bi bi-lock-fill me-1"></i>Off
                                 </button>
                             @endif
                         </div>
@@ -902,17 +1066,18 @@
 
 
 {{-- ══ KELENGKAPAN ══ --}}
-<section id="kelengkapan" style="background:var(--s50);">
+<section id="kelengkapan" style="background:var(--s50); padding: 1.75rem 0; overflow: hidden;">
     <div class="container">
-        <div class="row align-items-center g-5">
+        <div class="row align-items-center g-4 gx-lg-5">
             <div class="col-lg-6 reveal">
-                <div class="section-pill mb-2">Layanan Tambahan</div>
-                <h2 class="section-h mb-2">Kelengkapan Bermain</h2>
-                <p class="section-sub mb-4">Kami menyediakan persewaan alat dan perlengkapan berkualitas untuk menunjang permainan Anda.</p>
+                <div class="section-pill mb-1">Fasilitas &amp; Layanan</div>
+                <h2 class="section-h mb-1">Fasilitas &amp; Kelengkapan</h2>
+                <p class="section-sub mb-2" style="font-size:.82rem;">Fasilitas pendukung lengkap dan persewaan peralatan berkualitas untuk kenyamanan bermain Anda.</p>
 
-                <div class="row g-2 mb-4">
+                <div class="row g-2 mb-2">
+                    {{-- 0. Sewa Raket --}}
                     <div class="col-6">
-                        <div class="item-gear">
+                        <div class="item-gear gear-link active-slide" data-slide="0" onclick="c3dGoTo(0)" title="Lihat foto Sewa Raket">
                             <div class="icon-wrap">
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="15" cy="9" rx="5" ry="6"/><path d="M11.5 13.5L4 21"/><path d="M3.5 21.5L5.5 19.5" stroke-width="3"/></svg>
                             </div>
@@ -922,8 +1087,9 @@
                             </div>
                         </div>
                     </div>
+                    {{-- 1. Kok Satuan --}}
                     <div class="col-6">
-                        <div class="item-gear">
+                        <div class="item-gear gear-link" data-slide="1" onclick="c3dGoTo(1)" title="Lihat foto Kok Satuan">
                             <div class="icon-wrap">
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18C12 18 8 14 8 9C8 6.79086 9.79086 5 12 5C14.2091 5 16 6.79086 16 9C16 14 12 18 12 18Z"/><circle cx="12" cy="18" r="1.5" fill="currentColor"/></svg>
                             </div>
@@ -933,8 +1099,9 @@
                             </div>
                         </div>
                     </div>
+                    {{-- 2. Kok Slop --}}
                     <div class="col-6">
-                        <div class="item-gear">
+                        <div class="item-gear gear-link" data-slide="2" onclick="c3dGoTo(2)" title="Lihat foto Kok Slop">
                             <div class="icon-wrap">
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="8" height="16" rx="1"/><circle cx="12" cy="4" r="2" stroke-width="1"/></svg>
                             </div>
@@ -944,8 +1111,9 @@
                             </div>
                         </div>
                     </div>
+                    {{-- 3. Anbiyaa Water --}}
                     <div class="col-6">
-                        <div class="item-gear">
+                        <div class="item-gear gear-link" data-slide="3" onclick="c3dGoTo(3)" title="Lihat foto Anbiyaa Water">
                             <div class="icon-wrap">
                                 <i class="bi bi-droplet-fill" style="color:var(--sky)"></i>
                             </div>
@@ -955,62 +1123,190 @@
                             </div>
                         </div>
                     </div>
+                    {{-- 4. Toilet / WC --}}
+                    <div class="col-6">
+                        <div class="item-gear gear-link" data-slide="4" onclick="c3dGoTo(4)" title="Lihat foto Toilet / WC">
+                            <div class="icon-wrap">🚻</div>
+                            <div>
+                                <div class="name">Toilet / WC</div>
+                                <div class="price">5 WC Tersedia</div>
+                            </div>
+                        </div>
+                    </div>
+                    {{-- 5. Musholla --}}
+                    <div class="col-6">
+                        <div class="item-gear gear-link" data-slide="5" onclick="c3dGoTo(5)" title="Lihat foto Musholla">
+                            <div class="icon-wrap">🕌</div>
+                            <div>
+                                <div class="name">Musholla</div>
+                                <div class="price">Tersedia</div>
+                            </div>
+                        </div>
+                    </div>
+                    {{-- 6. Area Parkir --}}
+                    <div class="col-6">
+                        <div class="item-gear gear-link" data-slide="6" onclick="c3dGoTo(6)" title="Lihat foto Area Parkir">
+                            <div class="icon-wrap">🅿️</div>
+                            <div>
+                                <div class="name">Area Parkir</div>
+                                <div class="price">Parkir Luas</div>
+                            </div>
+                        </div>
+                    </div>
+                    {{-- Wi-Fi (Non-clickable info item) --}}
+                    <div class="col-6">
+                        <div class="item-gear">
+                            <div class="icon-wrap">
+                                <i class="bi bi-wifi" style="color:#ea580c;"></i>
+                            </div>
+                            <div>
+                                <div class="name">Wi-Fi</div>
+                                <div class="price">Free WiFi</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="p-3 rounded-3" style="background:#fff; border:1.5px solid var(--s200)">
-                    <div class="fw-bold text-dark mb-2" style="font-size:.85rem">
-                        <i class="bi bi-chat-dots-fill text-success me-2"></i>Kontak &amp; Sosial Media
+                {{-- Kontak & Sosial Media --}}
+                <div class="p-2 px-3 rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-2" style="background:#fff; border:1.5px solid var(--s200)">
+                    <div class="fw-bold text-dark d-flex align-items-center gap-1" style="font-size:.8rem">
+                        <i class="bi bi-chat-dots-fill text-success"></i> Kontak &amp; Sosmed:
                     </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <a href="https://wa.me/6289529508023" target="_blank" class="social-pill whatsapp">
-                            <i class="bi bi-whatsapp"></i>+62 895-2950-8023
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="https://wa.me/6289529508023" target="_blank" class="social-pill whatsapp" style="padding:.3rem .75rem; font-size:.73rem;">
+                            <i class="bi bi-whatsapp"></i> WhatsApp
                         </a>
-                        <a href="https://wa.me/6282187485422" target="_blank" class="social-pill whatsapp">
-                            <i class="bi bi-whatsapp"></i>+62 821-8748-5422
-                        </a>
-                        <a href="https://www.instagram.com/goranbiyaa_01?igsh=aDZwcW5iNnh3cjly" target="_blank" class="social-pill instagram">
-                            <i class="bi bi-instagram"></i>@goranbiyaa_01
+                        <a href="https://www.instagram.com/goranbiyaa_01?igsh=aDZwcW5iNnh3cjly" target="_blank" class="social-pill instagram" style="padding:.3rem .75rem; font-size:.73rem;">
+                            <i class="bi bi-instagram"></i> Instagram
                         </a>
                     </div>
                 </div>
             </div>
 
+            {{-- ══ 3D CAROUSEL (7 Slides) ══ --}}
             <div class="col-lg-6 reveal reveal-delay-2">
-                <div id="equipmentCarousel" class="carousel slide carousel-fade rounded-4 overflow-hidden" data-bs-ride="carousel" style="box-shadow:0 24px 64px rgba(0,0,0,.12); border:6px solid #fff; height:460px;">
-                    <!-- Indicators/dots -->
-                    <div class="carousel-indicators" style="margin-bottom: 1.5rem;">
-                        <button type="button" data-bs-target="#equipmentCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-                        <button type="button" data-bs-target="#equipmentCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-                        <button type="button" data-bs-target="#equipmentCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
-                    </div>
-
-                    <!-- The slideshow/carousel -->
-                    <div class="carousel-inner h-100">
-                        <div class="carousel-item active h-100">
-                            <img src="{{ asset('images/kelengkapan/raket_merah.jpg') }}" class="d-block w-100 h-100" style="object-fit:cover; object-position:center" alt="Raket Merah Premium">
-                        </div>
-                        <div class="carousel-item h-100">
-                            <img src="{{ asset('images/kelengkapan/raket_putih.jpg') }}" class="d-block w-100 h-100" style="object-fit:cover; object-position:center;" alt="Raket Putih Premium">
-                        </div>
-                        <div class="carousel-item h-100">
-                            <img src="{{ asset('images/kelengkapan/shuttlecock.png') }}" class="d-block w-100 h-100" style="object-fit:cover; object-position:center" alt="Shuttlecock Premium">
+                <div class="c3d-scene" id="c3dScene">
+                    {{-- Slide 0: Sewa Raket --}}
+                    <div class="card3d c-active" data-index="0">
+                        <img src="{{ asset('images/kelengkapan/raket_merah.jpg') }}" alt="Sewa Raket">
+                        <div class="c3d-cap">
+                            <div class="cap-t">🏸 Sewa Raket</div>
+                            <div class="cap-d">Sewa raket berkualitas &mdash; Rp 25.000 / Raket</div>
                         </div>
                     </div>
+                    {{-- Slide 1: Kok Satuan --}}
+                    <div class="card3d c-next" data-index="1">
+                        <img src="{{ asset('images/kelengkapan/shuttlecock.png') }}" alt="Kok Satuan">
+                        <div class="c3d-cap">
+                            <div class="cap-t">🪶 Kok Satuan</div>
+                            <div class="cap-d">Kok bulu berkualitas &mdash; Rp 15.000 / Pcs</div>
+                        </div>
+                    </div>
+                    {{-- Slide 2: Kok Slop --}}
+                    <div class="card3d c-hidden" data-index="2">
+                        <img src="{{ asset('images/kelengkapan/kok_slop.jpg') }}" alt="Kok Slop">
+                        <div class="c3d-cap">
+                            <div class="cap-t">📦 Kok Slop</div>
+                            <div class="cap-d">Rp 135.000 / Slop</div>
+                        </div>
+                    </div>
+                    {{-- Slide 3: Anbiyaa Water --}}
+                    <div class="card3d c-hidden" data-index="3">
+                        <img src="{{ asset('images/kelengkapan/anbiyaa_water.jpg') }}" alt="Anbiyaa Water">
+                        <div class="c3d-cap">
+                            <div class="cap-t">💧 Anbiyaa Water</div>
+                            <div class="cap-d">Rp 5.000 / Botol</div>
+                        </div>
+                    </div>
+                    {{-- Slide 4: Toilet / WC --}}
+                    <div class="card3d c-hidden" data-index="4">
+                        <img src="{{ asset('images/kelengkapan/toilet.jpg') }}" alt="Toilet / WC">
+                        <div class="c3d-cap">
+                            <div class="cap-t">🚻 Toilet / WC</div>
+                            <div class="cap-d">5 WC Bersih Tersedia</div>
+                        </div>
+                    </div>
+                    {{-- Slide 5: Musholla --}}
+                    <div class="card3d c-hidden" data-index="5">
+                        <img src="{{ asset('images/kelengkapan/musholla.jpg') }}" alt="Musholla">
+                        <div class="c3d-cap">
+                            <div class="cap-t">🕌 Musholla</div>
+                            <div class="cap-d">Tempat ibadah bersih &amp; nyaman</div>
+                        </div>
+                    </div>
+                    {{-- Slide 6: Area Parkir --}}
+                    <div class="card3d c-hidden" data-index="6">
+                        <img src="{{ asset('images/kelengkapan/area_parkir.jpg') }}" alt="Area Parkir">
+                        <div class="c3d-cap">
+                            <div class="cap-t">🅿️ Area Parkir</div>
+                            <div class="cap-d">Parkir Luas &amp; Aman</div>
+                        </div>
+                    </div>
+                </div>
 
-                    <!-- Left and right controls/icons -->
-                    <button class="carousel-control-prev" type="button" data-bs-target="#equipmentCarousel" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));"></span>
-                        <span class="visually-hidden">Sebelumnya</span>
+                {{-- Nav --}}
+                <div class="c3d-nav">
+                    <button class="c3d-btn" onclick="c3dPrev()" aria-label="Sebelumnya">
+                        <i class="bi bi-chevron-left"></i>
                     </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#equipmentCarousel" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));"></span>
-                        <span class="visually-hidden">Selanjutnya</span>
+                    <div class="c3d-dots" id="c3dDots">
+                        <div class="c3d-dot active" onclick="c3dGoTo(0)"></div>
+                        <div class="c3d-dot" onclick="c3dGoTo(1)"></div>
+                        <div class="c3d-dot" onclick="c3dGoTo(2)"></div>
+                        <div class="c3d-dot" onclick="c3dGoTo(3)"></div>
+                        <div class="c3d-dot" onclick="c3dGoTo(4)"></div>
+                        <div class="c3d-dot" onclick="c3dGoTo(5)"></div>
+                        <div class="c3d-dot" onclick="c3dGoTo(6)"></div>
+                    </div>
+                    <button class="c3d-btn" onclick="c3dNext()" aria-label="Selanjutnya">
+                        <i class="bi bi-chevron-right"></i>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+<script>
+(function () {
+    var cur = 0, len = 7;
+
+    function upd() {
+        var cards = document.querySelectorAll('#c3dScene .card3d');
+        var dots  = document.querySelectorAll('#c3dDots .c3d-dot');
+        var links = document.querySelectorAll('#kelengkapan .gear-link');
+
+        cards.forEach(function (c, i) {
+            c.classList.remove('c-active', 'c-prev', 'c-next', 'c-hidden');
+            if (i === cur)                         c.classList.add('c-active');
+            else if (i === (cur - 1 + len) % len) c.classList.add('c-prev');
+            else if (i === (cur + 1) % len)        c.classList.add('c-next');
+            else                                   c.classList.add('c-hidden');
+        });
+
+        dots.forEach(function (d, i) { d.classList.toggle('active', i === cur); });
+
+        links.forEach(function (el) {
+            el.classList.toggle('active-slide', parseInt(el.dataset.slide) === cur);
+        });
+    }
+
+    window.c3dGoTo = function (n) { cur = n; upd(); };
+    window.c3dNext = function ()  { cur = (cur + 1) % len; upd(); };
+    window.c3dPrev = function ()  { cur = (cur - 1 + len) % len; upd(); };
+
+    var timer = setInterval(window.c3dNext, 4000);
+
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('#c3dScene, #c3dDots, .c3d-btn, .gear-link')) {
+            clearInterval(timer);
+            timer = setInterval(window.c3dNext, 4000);
+        }
+    });
+
+    upd();
+})();
+</script>
 
 
 {{-- ══ TESTIMONI ══ --}}
@@ -1461,6 +1757,127 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.setItem('hasSeenCrmPromo', 'true');
     }
 });
+</script>
+
+<!-- Modal Foto & Detail Lapangan -->
+<div class="modal fade" id="modalFotoLapangan" tabindex="-1" aria-labelledby="modalFotoLapanganLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 960px;">
+        <div class="modal-content overflow-hidden border-0 shadow-lg" style="border-radius: 20px; background: #0f172a; color: #fff;">
+            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3 bg-dark bg-opacity-50 rounded-circle p-2" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="row g-0">
+                <!-- KIRI: Gambar Lapangan Full Vertikal -->
+                <div class="col-md-5 position-relative d-none d-md-block" style="background: #000; min-height: 520px;">
+                    <img id="modalCourtImg" src="" alt="Foto Lapangan" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: bottom; opacity: 0.95;">
+                    <div class="position-absolute bottom-0 start-0 w-100 p-4" style="background: linear-gradient(to top, rgba(15,23,42,1) 0%, rgba(15,23,42,0.6) 40%, transparent 100%); z-index: 2;">
+                        <span id="modalCourtStatusBadge" class="badge bg-success rounded-pill px-2.5 py-1 mb-2" style="font-size: .68rem;">Aktif Beroperasi</span>
+                        <h3 id="modalCourtTitle" class="fw-bold mb-0 text-white">Lapangan 1</h3>
+                    </div>
+                </div>
+
+                <!-- KANAN: Deskripsi & Informasi -->
+                <div class="col-md-7 d-flex flex-column justify-content-center p-4 p-lg-5">
+                    <h6 class="fw-bold text-sky mb-2" style="font-size: .85rem; letter-spacing: .5px; text-transform: uppercase;">Deskripsi &amp; Fasilitas Lapangan</h6>
+                    <p id="modalCourtDesc" class="text-white-50 mb-4" style="font-size: .9rem; line-height: 1.6;">
+                        Lapangan badminton berkualitas tinggi dengan karpet standar PBSI, pencahayaan LED terang anti-silau, dan sirkulasi udara yang nyaman.
+                    </p>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div class="rounded-3 d-flex align-items-center gap-3" style="padding: 12px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+                                <div class="d-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="background: rgba(14,165,233,0.15); width: 38px; height: 38px;">
+                                    <i class="bi bi-layers-fill text-sky" style="font-size: 1.05rem;"></i>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <div class="fw-bold text-truncate" style="font-size: .8rem; color: #fff;">Karpet Vinyl</div>
+                                    <div class="text-white-50 text-truncate" style="font-size: .72rem;">Standar PBSI</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="rounded-3 d-flex align-items-center gap-3" style="padding: 12px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+                                <div class="d-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="background: rgba(245,158,11,0.15); width: 38px; height: 38px;">
+                                    <i class="bi bi-lightbulb-fill text-warning" style="font-size: 1.05rem;"></i>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <div class="fw-bold text-truncate" style="font-size: .8rem; color: #fff;">Penerangan LED</div>
+                                    <div class="text-white-50 text-truncate" style="font-size: .72rem;">Anti-Silau 400W</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="rounded-3 d-flex align-items-center gap-3" style="padding: 12px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+                                <div class="d-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="background: rgba(6,182,212,0.15); width: 38px; height: 38px;">
+                                    <i class="bi bi-wind text-info" style="font-size: 1.05rem;"></i>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <div class="fw-bold text-truncate" style="font-size: .8rem; color: #fff;">Sirkulasi Udara</div>
+                                    <div class="text-white-50 text-truncate" style="font-size: .72rem;">Kipas Exhaust High</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="rounded-3 d-flex align-items-center gap-3" style="padding: 12px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+                                <div class="d-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="background: rgba(16,185,129,0.15); width: 38px; height: 38px;">
+                                    <i class="bi bi-people-fill text-success" style="font-size: 1.05rem;"></i>
+                                </div>
+                                <div class="overflow-hidden">
+                                    <div class="fw-bold text-truncate" style="font-size: .8rem; color: #fff;">Bench Pemain</div>
+                                    <div class="text-white-50 text-truncate" style="font-size: .72rem;">Area Istirahat</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-4 mb-4" style="padding: 20px 24px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+                        <h6 class="fw-bold text-sky mb-3" style="font-size: .85rem; letter-spacing: .5px; text-transform: uppercase;">Tarif Sewa Lapangan</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-white border-opacity-10 gap-3">
+                            <span class="text-white-50" style="font-size: .9rem; white-space: nowrap;">Senin – Jumat:</span>
+                            <span id="modalCourtWeekday" class="fw-bold text-sky" style="font-size: 1rem; white-space: nowrap;">Rp 55.000 / jam</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center gap-3">
+                            <span class="text-white-50" style="font-size: .9rem; white-space: nowrap;">Sabtu &amp; Minggu:</span>
+                            <span id="modalCourtWeekend" class="fw-bold text-warning" style="font-size: 1rem; white-space: nowrap;">Rp 60.000 / jam</span>
+                        </div>
+                    </div>
+
+                    <a id="modalBookingBtn" href="#" class="btn btn-primary w-100 py-3 rounded-pill fw-bold d-inline-flex align-items-center justify-content-center gap-2" style="font-size: .95rem; background: linear-gradient(135deg, var(--blue), var(--sky)); border: none; box-shadow: 0 8px 25px rgba(37,99,235,0.3); transition: transform 0.2s, box-shadow 0.2s;">
+                        <i class="bi bi-calendar-plus"></i>
+                        <span>Booking Lapangan Ini</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openCourtPhotoModal(title, imgUrl, desc, weekdayPrice, weekendPrice, bookingUrl, isAktif) {
+    document.getElementById('modalCourtTitle').innerText = title;
+    document.getElementById('modalCourtImg').src = imgUrl;
+    document.getElementById('modalCourtDesc').innerText = desc;
+    document.getElementById('modalCourtWeekday').innerText = weekdayPrice + ' / jam';
+    document.getElementById('modalCourtWeekend').innerText = weekendPrice + ' / jam';
+    
+    const bookingBtn = document.getElementById('modalBookingBtn');
+    const statusBadge = document.getElementById('modalCourtStatusBadge');
+    
+    if (bookingUrl && isAktif) {
+        bookingBtn.href = bookingUrl;
+        bookingBtn.classList.remove('disabled');
+        bookingBtn.style.pointerEvents = 'auto';
+        statusBadge.className = 'badge bg-success rounded-pill px-3 py-1';
+        statusBadge.innerText = 'Aktif Beroperasi';
+    } else {
+        bookingBtn.href = '#';
+        bookingBtn.classList.add('disabled');
+        bookingBtn.style.pointerEvents = 'none';
+        statusBadge.className = 'badge bg-danger rounded-pill px-3 py-1';
+        statusBadge.innerText = 'Tidak Aktif';
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalFotoLapangan'));
+    modal.show();
+}
 </script>
 
 <!-- Floating Loyalty Promo Button -->

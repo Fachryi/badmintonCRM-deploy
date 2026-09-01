@@ -539,7 +539,7 @@ function autoHarga() {
     const weekend = parseInt(opt.dataset.weekend || 0);
 
     const d = new Date(tgl.value);
-    const day = d.getDay(); // 0=Minggu, 6=Sabtu
+    const day = d.getUTCDay(); // 0=Minggu, 6=Sabtu
     const isWeekend = (day === 0 || day === 6);
     const hargaPerJam = isWeekend ? weekend : weekday;
 

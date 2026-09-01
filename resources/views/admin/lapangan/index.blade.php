@@ -126,7 +126,22 @@
             @endphp
             <div class="col-sm-6 col-xl-4">
                 <div class="court-card">
-                    <div class="court-header">
+                    <div style="height: 120px; overflow: hidden; position: relative;">
+                        <img src="{{ $l->foto_url }}" alt="{{ $l->nama_lapangan }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,23,42,0.85) 0%, transparent 60%);"></div>
+                        <div style="position: absolute; top: 8px; right: 8px;">
+                            @if($isAktif)
+                                <span class="badge rounded-pill" style="background:#d1fae5;color:#065f46;font-size:.65rem;">
+                                    <i class="bi bi-circle-fill me-1" style="font-size:.45rem;"></i>Aktif
+                                </span>
+                            @else
+                                <span class="badge rounded-pill" style="background:#fee2e2;color:#991b1b;font-size:.65rem;">
+                                    <i class="bi bi-circle-fill me-1" style="font-size:.45rem;"></i>Non-Aktif
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="court-header pt-2">
                         <div class="d-flex align-items-start gap-3">
                             <div class="court-badge-num" style="background:{{ $color }};">
                                 {{ $loop->iteration }}
@@ -134,15 +149,6 @@
                             <div class="flex-grow-1">
                                 <div class="d-flex align-items-center gap-2 flex-wrap">
                                     <h6 class="fw-bold mb-0" style="font-size:.95rem;">{{ $l->nama_lapangan }}</h6>
-                                    @if($isAktif)
-                                        <span class="badge rounded-pill" style="background:#d1fae5;color:#065f46;font-size:.65rem;">
-                                            <i class="bi bi-circle-fill me-1" style="font-size:.45rem;"></i>Aktif
-                                        </span>
-                                    @else
-                                        <span class="badge rounded-pill" style="background:#fee2e2;color:#991b1b;font-size:.65rem;">
-                                            <i class="bi bi-circle-fill me-1" style="font-size:.45rem;"></i>Non-Aktif
-                                        </span>
-                                    @endif
                                 </div>
                                 @if($l->deskripsi)
                                     <div class="text-muted mt-1" style="font-size:.76rem; line-height:1.4;">

@@ -14,8 +14,18 @@ class Lapangan extends Model
 
     public function getFotoUrlAttribute(): string
     {
-        return $this->foto
-            ? asset('storage/' . $this->foto)
-            : 'https://via.placeholder.com/400x200/0f172a/ffffff?text=' . urlencode($this->nama_lapangan);
+        if ($this->foto) {
+            return asset('storage/' . $this->foto);
+        }
+
+        // Default fallback images based on ID or name
+        if (str_contains(strtolower($this->nama_lapangan), '3') || $this->id == 3) {
+            return asset('images/lapangan/lapangan-3.jpg');
+        }
+        if (str_contains(strtolower($this->nama_lapangan), '2') || $this->id == 2) {
+            return asset('images/lapangan/lapangan-2.jpg');
+        }
+
+        return asset('images/lapangan/lapangan-1.jpg');
     }
 }

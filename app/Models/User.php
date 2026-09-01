@@ -69,7 +69,36 @@ class User extends Authenticatable
 
     public function isAdmin(): bool    { return $this->role === 'admin'; }
     public function isPelanggan(): bool { return $this->role === 'pelanggan'; }
-    public function isMember(): bool   { return in_array($this->kategori_member, ['member', 'weekday_pagi', 'weekday_malam', 'weekend']); }
+    
+    public function isMember(): bool   
+    {
+        if (!in_array($this->kategori_member, ['member', 'weekday_pagi', 'weekday_malam', 'weekend'])) {
+            return false;
+        }
+
+        if ($this->membership_expires_at && $this->membership_expires_at->isPast()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function isMembershipExpired(): bool
+    {
+        return in_array($this->kategori_member, ['member', 'weekday_pagi', 'weekday_malam', 'weekend'])
+            && $this->membership_expires_at
+            && $this->membership_expires_at->isPast();
+    }
+
+    public function scopeActiveMember($query)
+    {
+        return $query->whereIn('kategori_member', ['member', 'weekday_pagi', 'weekday_malam', 'weekend'])
+            ->where(function ($q) {
+                $q->whereNull('membership_expires_at')
+                  ->orWhere('membership_expires_at', '>=', now());
+            });
+    }
+
 
     public function bookings()      { return $this->hasMany(Booking::class); }
     public function pointsHistory() { return $this->hasMany(PointHistory::class); }

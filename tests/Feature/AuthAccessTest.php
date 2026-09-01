@@ -277,4 +277,44 @@ class AuthAccessTest extends TestCase
         // Booking masa depan harus dibatalkan
         $this->assertEquals('dibatalkan', $bookingMasaDepan->status);
     }
+
+    public function test_is_member_returns_false_when_membership_expires_at_is_in_past(): void
+    {
+        $activeMember = User::create([
+            'name'                  => 'Active Member Test',
+            'username'              => 'active_member_test',
+            'password'              => bcrypt('password'),
+            'role'                  => 'pelanggan',
+            'kategori_member'       => 'weekday_pagi',
+            'membership_expires_at' => \Carbon\Carbon::now()->addDays(10),
+        ]);
+
+        $expiredMember = User::create([
+            'name'                  => 'Expired Member Test',
+            'username'              => 'expired_member_test',
+            'password'              => bcrypt('password'),
+            'role'                  => 'pelanggan',
+            'kategori_member'       => 'weekday_pagi',
+            'membership_expires_at' => \Carbon\Carbon::now()->subDays(5),
+        ]);
+
+        $nonMember = User::create([
+            'name'                  => 'Non Member Test',
+            'username'              => 'non_member_test',
+            'password'              => bcrypt('password'),
+            'role'                  => 'pelanggan',
+            'kategori_member'       => 'non-member',
+            'membership_expires_at' => null,
+        ]);
+
+        $this->assertTrue($activeMember->isMember());
+        $this->assertFalse($activeMember->isMembershipExpired());
+
+        $this->assertFalse($expiredMember->isMember());
+        $this->assertTrue($expiredMember->isMembershipExpired());
+
+        $this->assertFalse($nonMember->isMember());
+        $this->assertFalse($nonMember->isMembershipExpired());
+    }
 }
+

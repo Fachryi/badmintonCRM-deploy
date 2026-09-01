@@ -239,7 +239,7 @@ class AdminController extends Controller
     {
         // cancelExpiredGracefully dihandle oleh scheduler, tidak perlu dipanggil di sini
 
-        $query = Booking::with(['user', 'lapangan', 'jadwal', 'pembayaran']);
+        $query = Booking::with(['user', 'lapangan', 'jadwal', 'pembayaran', 'bookingFasilitas.fasilitas']);
 
         // Filter berdasarkan status
         if ($request->status) {
@@ -464,25 +464,24 @@ class AdminController extends Controller
             }
         }
 
-        $pembayaran->update([
-            'status_verifikasi' => $request->status_verifikasi,
-            'catatan_admin'     => $request->catatan_admin,
-            'verified_at'       => now(),
-        ]);
+        // Semua update (status pembayaran + booking + jadwal) harus satu unit atomik
+        DB::transaction(function () use ($request, $pembayaran) {
+            // Update status pembayaran dulu di dalam transaksi
+            $pembayaran->update([
+                'status_verifikasi' => $request->status_verifikasi,
+                'catatan_admin'     => $request->catatan_admin,
+                'verified_at'       => now(),
+            ]);
 
-        if ($request->status_verifikasi === 'diverifikasi') {
-            DB::transaction(function() use ($pembayaran) {
+            if ($request->status_verifikasi === 'diverifikasi') {
                 $pembayaran->booking->update(['status' => 'dipesan']);
                 $pembayaran->booking->jadwal->update(['status' => 'dipesan']);
 
-                $otherPending = Booking::where('jadwal_id', $pembayaran->booking->jadwal_id)
+                // Batalkan booking lain yang masih pending untuk jadwal yang sama
+                Booking::where('jadwal_id', $pembayaran->booking->jadwal_id)
                     ->where('id', '!=', $pembayaran->booking_id)
                     ->where('status', 'pending')
-                    ->get();
-                
-                foreach ($otherPending as $ob) {
-                    $ob->update(['status' => 'dibatalkan']);
-                }
+                    ->update(['status' => 'dibatalkan']);
 
                 // Hitung dan tambahkan Loyalty Points setelah pembayaran terverifikasi
                 $booking = $pembayaran->booking->load([
@@ -496,30 +495,27 @@ class AdminController extends Controller
                     $poinDidapat = $loyaltyService->kreditPoinDariBooking($booking);
 
                     if ($poinDidapat > 0) {
-                        $catatanLama = $pembayaran->catatan_admin;
                         $catatanBaru = "[Loyalty +{$poinDidapat} poin → {$booking->user->name}]";
                         $pembayaran->update([
-                            'catatan_admin' => $catatanLama
-                                ? $catatanLama . "\n" . $catatanBaru
+                            'catatan_admin' => $pembayaran->catatan_admin
+                                ? $pembayaran->catatan_admin . "\n" . $catatanBaru
                                 : $catatanBaru,
                         ]);
                     }
                 }
-            });
-        } elseif ($request->status_verifikasi === 'ditolak') {
-            DB::transaction(function() use ($pembayaran) {
+            } elseif ($request->status_verifikasi === 'ditolak') {
                 $pembayaran->booking->update(['status' => 'dibatalkan']);
-                
-                $otherBookings = Booking::where('jadwal_id', $pembayaran->booking->jadwal_id)
+
+                $masihAdaBookingAktif = Booking::where('jadwal_id', $pembayaran->booking->jadwal_id)
                     ->where('id', '!=', $pembayaran->booking_id)
                     ->whereIn('status', ['pending', 'dikonfirmasi', 'dipesan'])
                     ->exists();
 
-                if (!$otherBookings) {
+                if (!$masihAdaBookingAktif) {
                     $pembayaran->booking->jadwal->update(['status' => 'tersedia']);
                 }
-            });
-        }
+            }
+        });
 
         return back()->with('success', 'Verifikasi pembayaran berhasil!');
     }
@@ -1196,7 +1192,7 @@ class AdminController extends Controller
                         ->where('jam_mulai', '<', $payment->jam_selesai)
                         ->where('jam_selesai', '>', $payment->jam_mulai)
                         ->whereHas('user', function($qu) {
-                            $qu->whereIn('kategori_member', ['member', 'weekday_pagi', 'weekday_malam', 'weekend']);
+                            $qu->activeMember();
                         })
                         ->first();
 

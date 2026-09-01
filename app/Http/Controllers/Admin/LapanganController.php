@@ -10,6 +10,7 @@ use App\Models\Booking;
 use App\Models\HariLibur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 /**
@@ -41,6 +42,7 @@ class LapanganController extends Controller
             'harga_weekday' => 'required|numeric|min:1000',
             'harga_weekend' => 'required|numeric|min:1000',
             'status'        => 'required|in:aktif,nonaktif',
+            'foto'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
         ], [
             'nama_lapangan.required' => 'Nama lapangan wajib diisi.',
             'harga_weekday.required' => 'Harga Senin-Jumat wajib diisi.',
@@ -49,7 +51,14 @@ class LapanganController extends Controller
             'harga_weekend.numeric'  => 'Harga harus berupa angka.',
             'harga_weekday.min'      => 'Harga minimal Rp 1.000.',
             'harga_weekend.min'      => 'Harga minimal Rp 1.000.',
+            'foto.image'             => 'File foto harus berupa gambar.',
+            'foto.mimes'             => 'Format gambar harus jpg, jpeg, png, atau webp.',
+            'foto.max'               => 'Ukuran foto maksimal 3MB.',
         ]);
+
+        if ($request->hasFile('foto')) {
+            $validated['foto'] = $request->file('foto')->store('lapangan', 'public');
+        }
 
         Lapangan::create($validated);
 
@@ -69,12 +78,26 @@ class LapanganController extends Controller
     {
         $validated = $request->validate([
             'nama_lapangan' => 'required|string|max:100',
+            'deskripsi'     => 'nullable|string|max:500',
             'harga_weekday' => 'required|numeric|min:1000',
             'harga_weekend' => 'required|numeric|min:1000',
             'status'        => 'required|in:aktif,nonaktif',
+            'foto'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
+        ], [
+            'foto.image'    => 'File foto harus berupa gambar.',
+            'foto.mimes'    => 'Format gambar harus jpg, jpeg, png, atau webp.',
+            'foto.max'      => 'Ukuran foto maksimal 3MB.',
         ]);
 
         $lapangan = Lapangan::findOrFail($id);
+
+        if ($request->hasFile('foto')) {
+            if ($lapangan->foto && Storage::disk('public')->exists($lapangan->foto)) {
+                Storage::disk('public')->delete($lapangan->foto);
+            }
+            $validated['foto'] = $request->file('foto')->store('lapangan', 'public');
+        }
+
         $lapangan->update($validated);
 
         return redirect()->route('admin.lapangan.index')
@@ -94,6 +117,10 @@ class LapanganController extends Controller
         if ($adaBookingAktif) {
             return redirect()->route('admin.lapangan.index')
                 ->with('error', 'Tidak dapat menghapus lapangan karena masih ada booking aktif. Selesaikan atau batalkan booking terkait terlebih dahulu.');
+        }
+
+        if ($lapangan->foto && Storage::disk('public')->exists($lapangan->foto)) {
+            Storage::disk('public')->delete($lapangan->foto);
         }
 
         $lapangan->delete();
@@ -146,69 +173,79 @@ class LapanganController extends Controller
             return back()->withInput()->with('error', 'Gagal memblokir! Waktu harus berada di dalam jam operasional GOR (07:00 - 24:00) dan jam selesai harus setelah jam mulai.');
         }
 
-        // Cek apakah jadwal bentrok (ada booking aktif/pending)
-        $exists = Jadwal::where('lapangan_id', $request->lapangan_id)
-            ->where('tanggal', $request->tanggal)
-            ->where('jam_mulai', '<', $request->jam_selesai)
-            ->where('jam_selesai', '>', $request->jam_mulai)
-            ->whereIn('status', ['pending', 'dipesan'])
-            ->exists();
-
-        if ($exists) {
-            return back()->with('error', 'Gagal memblokir! Sudah ada booking aktif/pending di waktu tersebut.');
-        }
-
-        // Cek bentrok dengan slot rutin member (aktif atau pending)
-        $dayNames = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
-        $dayOfWeek = $dayNames[\Carbon\Carbon::parse($request->tanggal)->dayOfWeek];
-        $overlapMember = \App\Models\MembershipPayment::where('lapangan_id', $request->lapangan_id)
-            ->where('hari', $dayOfWeek)
-            ->whereIn('status_verifikasi', ['menunggu', 'diverifikasi'])
-            ->where('jam_mulai', '<', $request->jam_selesai)
-            ->where('jam_selesai', '>', $request->jam_mulai)
-            ->where(function($q) use ($request) {
-                $q->where('status_verifikasi', 'menunggu')
-                  ->orWhereHas('user', function($qu) use ($request) {
-                      $qu->whereIn('kategori_member', ['member', 'weekday_pagi', 'weekday_malam', 'weekend'])
-                        ->where(function ($query) use ($request) {
-                            $query->whereNull('membership_expires_at')
-                                  ->orWhere('membership_expires_at', '>=', \Carbon\Carbon::parse($request->tanggal)->startOfDay());
-                        });
-                  });
-            })
-            ->first();
-
-        if ($overlapMember) {
-            $namaMember = $overlapMember->user->name ?? 'Calon Member';
-            return back()->withInput()->with('error', 'Gagal memblokir! Slot waktu ini sudah terisi oleh slot rutin member (' . $namaMember . ').');
-        }
-
         // Cek jika waktu yang diinput sudah terlewat (di masa lalu)
         $startDateTime = Carbon::parse($request->tanggal . ' ' . $request->jam_mulai);
         if ($startDateTime->lt(Carbon::now()->subMinutes(2))) {
             return back()->withInput()->with('error', 'Gagal memblokir! Waktu tidak boleh di masa lalu.');
         }
 
-        // Hapus slot tersedia yang overlap agar tidak terjadi duplikasi/constraint violation
-        Jadwal::where('lapangan_id', $request->lapangan_id)
-            ->where('tanggal', $request->tanggal)
-            ->where('jam_mulai', '<', $request->jam_selesai)
-            ->where('jam_selesai', '>', $request->jam_mulai)
-            ->where('status', 'tersedia')
-            ->delete();
+        $dayNames = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
+        $dayOfWeek = $dayNames[Carbon::parse($request->tanggal)->dayOfWeek];
 
-        Jadwal::updateOrCreate(
-            [
-                'lapangan_id' => $request->lapangan_id,
-                'tanggal'     => $request->tanggal,
-                'jam_mulai'   => $request->jam_mulai,
-            ],
-            [
-                'jam_selesai' => $request->jam_selesai,
-                'status'      => 'ditutup',
-                'keterangan'  => $request->keterangan
-            ]
-        );
+        try {
+            DB::transaction(function () use ($request, $dayOfWeek) {
+                // Lock row lapangan untuk proteksi transaksi bersamaan
+                Lapangan::lockForUpdate()->find($request->lapangan_id);
+
+                // Cek apakah jadwal bentrok (ada booking aktif/pending)
+                $exists = Jadwal::where('lapangan_id', $request->lapangan_id)
+                    ->where('tanggal', $request->tanggal)
+                    ->where('jam_mulai', '<', $request->jam_selesai)
+                    ->where('jam_selesai', '>', $request->jam_mulai)
+                    ->whereIn('status', ['pending', 'dipesan'])
+                    ->exists();
+
+                if ($exists) {
+                    throw new \Exception('Gagal memblokir! Sudah ada booking aktif/pending di waktu tersebut.');
+                }
+
+                // Cek bentrok dengan slot rutin member (aktif atau pending)
+                $overlapMember = \App\Models\MembershipPayment::where('lapangan_id', $request->lapangan_id)
+                    ->where('hari', $dayOfWeek)
+                    ->whereIn('status_verifikasi', ['menunggu', 'diverifikasi'])
+                    ->where('jam_mulai', '<', $request->jam_selesai)
+                    ->where('jam_selesai', '>', $request->jam_mulai)
+                    ->where(function($q) use ($request) {
+                        $q->where('status_verifikasi', 'menunggu')
+                          ->orWhereHas('user', function($qu) use ($request) {
+                              $qu->whereIn('kategori_member', ['member', 'weekday_pagi', 'weekday_malam', 'weekend'])
+                                ->where(function ($query) use ($request) {
+                                    $query->whereNull('membership_expires_at')
+                                          ->orWhere('membership_expires_at', '>=', \Carbon\Carbon::parse($request->tanggal)->startOfDay());
+                                });
+                          });
+                    })
+                    ->first();
+
+                if ($overlapMember) {
+                    $namaMember = $overlapMember->user->name ?? 'Calon Member';
+                    throw new \Exception('Gagal memblokir! Slot waktu ini sudah terisi oleh slot rutin member (' . $namaMember . ').');
+                }
+
+                // Hapus slot tersedia yang overlap agar tidak terjadi duplikasi/constraint violation
+                Jadwal::where('lapangan_id', $request->lapangan_id)
+                    ->where('tanggal', $request->tanggal)
+                    ->where('jam_mulai', '<', $request->jam_selesai)
+                    ->where('jam_selesai', '>', $request->jam_mulai)
+                    ->where('status', 'tersedia')
+                    ->delete();
+
+                Jadwal::updateOrCreate(
+                    [
+                        'lapangan_id' => $request->lapangan_id,
+                        'tanggal'     => $request->tanggal,
+                        'jam_mulai'   => $request->jam_mulai,
+                    ],
+                    [
+                        'jam_selesai' => $request->jam_selesai,
+                        'status'      => 'ditutup',
+                        'keterangan'  => $request->keterangan
+                    ]
+                );
+            });
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('admin.jadwal.index')
             ->with('success', 'Jam lapangan berhasil diblokir/ditutup!');
@@ -322,17 +359,7 @@ class LapanganController extends Controller
             return back()->withInput()->with('error', 'Gagal mencatat booking offline: Slot waktu ini sudah terisi oleh slot rutin member (' . $namaMember . ').');
         }
 
-        // Pengecekan overlap dengan booking aktif (pending, dipesan, ditutup)
-        $overlap = Jadwal::where('lapangan_id', $request->lapangan_id)
-            ->where('tanggal', $request->tanggal)
-            ->whereIn('status', ['pending', 'dipesan', 'ditutup'])
-            ->where('jam_mulai', '<', $request->jam_selesai)
-            ->where('jam_selesai', '>', $request->jam_mulai)
-            ->exists();
-
-        if ($overlap) {
-            return back()->withInput()->with('error', 'Gagal mencatat booking offline: Slot waktu ini sudah terisi atau ditutup oleh pemesanan lain.');
-        }
+        // (Pengecekan overlap sudah dilakukan di atas — blok ini dihapus untuk menghindari duplikasi cek)
 
         // Hapus slot tersedia yang overlap agar tidak terjadi duplikasi/constraint violation
         Jadwal::where('lapangan_id', $request->lapangan_id)
@@ -367,9 +394,9 @@ class LapanganController extends Controller
                                     $hargaFasilitas += ($qty * $f->harga);
                                     $fasilitasArr[] = $f->nama . " x" . $qty;
                                 } else {
-                                    $pesanError = "Stok fasilitas {$f->nama} tidak mencukupi.";
+                                    $pesanError = "Mohon maaf, stok {$f->nama} tidak mencukupi untuk jumlah yang diminta.";
                                     if ($availability['tersedia_pada']) {
-                                        $pesanError .= " Akan tersedia pada jam " . $availability['tersedia_pada'];
+                                        $pesanError .= " Fasilitas ini baru akan tersedia kembali pada jam " . $availability['tersedia_pada'] . ".";
                                     }
                                     throw new \Exception($pesanError);
                                 }

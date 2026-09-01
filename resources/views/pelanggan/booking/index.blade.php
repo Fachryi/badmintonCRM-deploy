@@ -850,7 +850,11 @@
                                     <div>
                                         <div class="fw-bold text-dark" style="font-size: 0.82rem;">{{ $l->nama_lapangan }}</div>
                                         <div class="text-muted small court-price-display" id="court-price-{{ $l->id }}" style="font-size: 0.72rem;">
-                                            Rp {{ number_format($l->harga_weekday, 0, ',', '.') }} / Jam
+                                            @php
+                                                $isWeekendInit = \Carbon\Carbon::parse($tanggal)->isWeekend();
+                                                $priceInit = $isWeekendInit ? $l->harga_weekend : $l->harga_weekday;
+                                            @endphp
+                                            Rp {{ number_format($priceInit, 0, ',', '.') }} / Jam
                                         </div>
                                     </div>
                                 </div>
@@ -1432,7 +1436,7 @@ function updateVouchersState() {
     let selesaiHour = 0;
     let durasi = 0;
     if (hasBookingSlot) {
-        isWeekend = [0, 6].includes(new Date(tanggalInput.value).getDay());
+        isWeekend = [0, 6].includes(new Date(tanggalInput.value).getUTCDay());
         mulaiHour = parseInt(jamMulaiInput.value.split(':')[0]);
         selesaiHour = parseInt(jamSelesaiInput.value.split(':')[0]);
         if (jamSelesaiInput.value.endsWith('59')) {
@@ -1655,6 +1659,7 @@ function selectCourt(id) {
     filterOccupiedSchedulesTab();
 
     updateHargaBadgeCreate();
+    updateAllCourtPrices();
     hitungTotal();
     renderTimeline();
 }
@@ -1674,6 +1679,8 @@ function onDateChange(val) {
     }
     disablePastHours();
     updateAllCourtPrices();
+    updateHargaBadgeCreate();
+    hitungTotal();
     fetchOccupiedSchedules();
 }
 
@@ -2059,7 +2066,7 @@ function hitungTotal() {
         const paymentVal = document.querySelector('input[name="metode_pembayaran"]:checked').value;
         document.getElementById('invoice-payment').textContent = paymentVal === 'qris' ? 'QRIS' : 'Tunai';
 
-        const isWeekend = [0,6].includes(new Date(tanggal.value).getDay());
+        const isWeekend = [0,6].includes(new Date(tanggal.value).getUTCDay());
         const hargaPerJam = isWeekend ? parseInt(courtRadio.dataset.weekend) : parseInt(courtRadio.dataset.weekday);
         
         let mulai = parseInt(jamMulai.value.split(':')[0]);
@@ -2218,7 +2225,7 @@ function updateAllCourtPrices() {
     if (!tanggalInput || !tanggalInput.value) return;
 
     const date = new Date(tanggalInput.value);
-    const day = date.getDay();
+    const day = date.getUTCDay();
     const isWeekend = (day === 0 || day === 6);
 
     document.querySelectorAll('input[name="lapangan_id"]').forEach(radio => {
@@ -2247,7 +2254,7 @@ function updateHargaBadgeCreate() {
     const hargaWeekday = parseInt(activeRadio.dataset.weekday);
     const hargaWeekend = parseInt(activeRadio.dataset.weekend);
     const date = new Date(tanggalInput.value);
-    const day = date.getDay();
+    const day = date.getUTCDay();
     const isWeekend = (day === 0 || day === 6);
 
     const harga = isWeekend ? hargaWeekend : hargaWeekday;

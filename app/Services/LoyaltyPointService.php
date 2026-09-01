@@ -447,24 +447,30 @@ class LoyaltyPointService
         }
 
         DB::transaction(function () use ($user, $tipe, $jumlahPoin, $keterangan) {
+            $lockedUser = User::lockForUpdate()->find($user->id);
+            
+            if ($tipe === 'debit' && $lockedUser->poin_saldo < $jumlahPoin) {
+                throw new \Exception("Poin tidak mencukupi saat proses debit. Saldo saat ini: {$lockedUser->poin_saldo} poin.");
+            }
+
             if ($tipe === 'kredit') {
-                $user->increment('poin_saldo', $jumlahPoin);
-                $user->increment('poin_bulanan', $jumlahPoin);
+                $lockedUser->increment('poin_saldo', $jumlahPoin);
+                $lockedUser->increment('poin_bulanan', $jumlahPoin);
             } else {
-                $user->decrement('poin_saldo', $jumlahPoin);
+                $lockedUser->decrement('poin_saldo', $jumlahPoin);
                 // Kurangi poin_bulanan juga, jaga agar tidak kurang dari 0
-                $user->update([
-                    'poin_bulanan' => max(0, $user->poin_bulanan - $jumlahPoin)
+                $lockedUser->update([
+                    'poin_bulanan' => max(0, $lockedUser->poin_bulanan - $jumlahPoin)
                 ]);
             }
-            $user->refresh();
+            $lockedUser->refresh();
 
             PointHistory::create([
-                'user_id'     => $user->id,
+                'user_id'     => $lockedUser->id,
                 'booking_id'  => null,
                 'tipe'        => $tipe,
                 'jumlah_poin' => $jumlahPoin,
-                'poin_saldo_after' => $user->poin_saldo,
+                'poin_saldo_after' => $lockedUser->poin_saldo,
                 'sumber'      => 'penyesuaian_manual',
                 'keterangan'  => $keterangan ?: ($tipe === 'kredit' ? 'Kredit Poin Manual oleh Admin' : 'Debit Poin Manual oleh Admin'),
                 'expired_at'  => $tipe === 'kredit' ? now()->addMonths(self::EXPIRY_MONTHS) : null,
@@ -520,22 +526,24 @@ class LoyaltyPointService
         }
 
         return DB::transaction(function () use ($user, $jenisHadiah, $poinDibutuhkan, $label) {
-            // 1. Kurangi saldo poin (atomic decrement)
-            $user->decrement('poin_saldo', $poinDibutuhkan);
+            // Lock record user untuk mencegah race condition jika user menukar poin dari dua device bersamaan
+            $lockedUser = User::lockForUpdate()->find($user->id);
 
-            // Safety net: pastikan tidak pernah negatif
-            if ($user->fresh()->poin_saldo < 0) {
-                throw new \Exception("Terjadi konflik data. Silakan coba kembali.");
+            if ($lockedUser->poin_saldo < $poinDibutuhkan) {
+                throw new \Exception("Poin tidak mencukupi saat proses penukaran. Saldo saat ini: {$lockedUser->poin_saldo} poin.");
             }
-            $user->refresh();
+
+            // 1. Kurangi saldo poin (atomic decrement)
+            $lockedUser->decrement('poin_saldo', $poinDibutuhkan);
+            $lockedUser->refresh();
 
             // 2. Catat debit di points_history
             PointHistory::create([
-                'user_id'     => $user->id,
+                'user_id'     => $lockedUser->id,
                 'booking_id'  => null,
                 'tipe'        => 'debit',
                 'jumlah_poin' => $poinDibutuhkan,
-                'poin_saldo_after' => $user->poin_saldo,
+                'poin_saldo_after' => $lockedUser->poin_saldo,
                 'sumber'      => 'penukaran_' . $jenisHadiah,
                 'keterangan'  => "Penukaran Poin: {$label}",
                 'expired_at'  => null,

@@ -277,6 +277,9 @@ class BookingController extends Controller
 
         try {
             $booking = DB::transaction(function () use ($request) {
+                // Kunci data lapangan untuk mencegah race condition (double booking) pada waktu yang bersamaan
+                $lapangan = Lapangan::lockForUpdate()->find($request->lapangan_id);
+                
                 // Cek apakah jadwal benar-benar sudah DIPESAN (dikonfirmasi admin)
                 // Jika masih PENDING, pelanggan lain masih boleh mencoba memesan (siapa cepat dia bayar)
                 $overlap = Jadwal::where('lapangan_id', $request->lapangan_id)
@@ -284,10 +287,10 @@ class BookingController extends Controller
                     ->whereIn('status', ['pending', 'dipesan', 'ditutup'])
                     ->where('jam_mulai', '<', $request->jam_selesai)
                     ->where('jam_selesai', '>', $request->jam_mulai)
-                    ->lockForUpdate()->exists();
+                    ->exists();
 
                 if ($overlap) {
-                    throw new \Exception('Jadwal bentrok! Lapangan sudah terpesan oleh Member atau sedang ditutup.');
+                    throw new \Exception('Mohon maaf, jadwal tersebut baru saja dipesan oleh pengguna lain atau sedang ditutup. Silakan pilih jadwal lain.');
                 }
 
                 // Simpan atau update jadwal dengan status 'pending'
@@ -304,7 +307,6 @@ class BookingController extends Controller
                 );
 
                 // Hitung total harga
-                $lapangan = Lapangan::find($request->lapangan_id);
                 // Kalkulasi harga dasar lapangan
                 $isWeekend = \Carbon\Carbon::parse($request->tanggal)->isWeekend();
                 $hargaPerJam = $isWeekend ? $lapangan->harga_weekend : $lapangan->harga_weekday;
@@ -327,9 +329,9 @@ class BookingController extends Controller
                                     $totalHarga += ($qty * $f->harga);
                                     $fasilitasArr[] = $f->nama . " x" . $qty;
                                 } else {
-                                    $pesanError = "Stok fasilitas {$f->nama} tidak mencukupi.";
+                                    $pesanError = "Mohon maaf, stok {$f->nama} tidak mencukupi untuk jumlah yang diminta.";
                                     if ($availability['tersedia_pada']) {
-                                        $pesanError .= " Akan tersedia pada jam " . $availability['tersedia_pada'];
+                                        $pesanError .= " Fasilitas ini baru akan tersedia kembali pada jam " . $availability['tersedia_pada'] . ".";
                                     }
                                     throw new \Exception($pesanError);
                                 }
@@ -361,7 +363,7 @@ class BookingController extends Controller
                         ->get();
 
                     if ($appliedMembershipVouchers->count() !== count($mIds)) {
-                        throw new \Exception('Salah satu voucher keanggotaan tidak ditemukan, sudah digunakan, atau tidak berlaku.');
+                        throw new \Exception('Voucher keanggotaan tidak ditemukan atau sudah tidak berlaku.');
                     }
                 }
 
@@ -380,7 +382,7 @@ class BookingController extends Controller
                         ->get();
 
                     if ($appliedRedemptions->count() !== count($rIds)) {
-                        throw new \Exception('Salah satu voucher penukaran poin tidak ditemukan, sudah digunakan, atau tidak berlaku.');
+                        throw new \Exception('Voucher poin tidak ditemukan atau sudah kedaluwarsa.');
                     }
                 }
 
@@ -440,11 +442,11 @@ class BookingController extends Controller
                     if ($tier === 'ally') {
                         // Gratis Anbiyaa Water
                         if (!$waterFasilitas) {
-                            throw new \Exception('Voucher Gratis Anbiyaa Water tidak bisa digunakan: fasilitas air mineral tidak tersedia saat ini. Silakan hubungi admin.');
+                            throw new \Exception('Maaf, voucher Gratis Anbiyaa Water belum bisa digunakan karena stok air mineral sedang kosong.');
                         }
                         $usedWaterVouchers++;
                         if ($qtyWater < $usedWaterVouchers) {
-                            throw new \Exception('Voucher Gratis Anbiyaa Water (Keanggotaan) memerlukan Anda menambahkan minimal ' . $usedWaterVouchers . ' Air Mineral.');
+                            throw new \Exception("Untuk menggunakan Voucher Gratis Air Mineral, mohon tambahkan minimal {$usedWaterVouchers} Air Mineral ke pesanan Anda.");
                         }
                         $discount = $waterFasilitas->harga;
                         $totalDiscount += $discount;
@@ -452,11 +454,11 @@ class BookingController extends Controller
                     } elseif ($tier === 'partner') {
                         // Gratis Sewa Raket 1 Sesi
                         if (!$raketFasilitas) {
-                            throw new \Exception('Voucher Gratis Sewa Raket tidak bisa digunakan: fasilitas raket tidak tersedia saat ini. Silakan hubungi admin.');
+                            throw new \Exception('Maaf, voucher Gratis Sewa Raket belum bisa digunakan karena stok raket sedang kosong.');
                         }
                         $usedRaketVouchers++;
                         if ($qtyRaket < $usedRaketVouchers) {
-                            throw new \Exception('Voucher Gratis Sewa Raket (Keanggotaan) memerlukan Anda menyewa minimal ' . $usedRaketVouchers . ' raket.');
+                            throw new \Exception("Untuk menggunakan Voucher Gratis Sewa Raket, mohon tambahkan minimal {$usedRaketVouchers} raket ke pesanan Anda.");
                         }
                         $discount = $raketFasilitas->harga;
                         $totalDiscount += $discount;
@@ -465,11 +467,11 @@ class BookingController extends Controller
                         // Gratis 1 Jam Sewa Lapangan Off-Peak (07:00-16:00)
                         $isOffPeak = (!$isWeekend && $mulai >= 7 && $mulai < 16);
                         if (!$isOffPeak) {
-                            throw new \Exception('Voucher Gratis 1 Jam Lapangan Off-Peak (Keanggotaan) hanya berlaku jam 07:00-16:00 pada Weekdays.');
+                            throw new \Exception('Voucher Gratis Lapangan (Off-Peak) hanya bisa digunakan pada hari kerja (Senin-Jumat) antara jam 07:00 hingga 16:00.');
                         }
                         $usedOffPeakVouchers++;
                         if ($usedOffPeakVouchers + $usedPeakVouchers > $durasi) {
-                            throw new \Exception('Jumlah voucher gratis lapangan melebihi durasi jam sewa.');
+                            throw new \Exception('Anda mencoba menggunakan voucher lapangan lebih banyak dari durasi sewa yang dipilih.');
                         }
                         $totalDiscount += $hargaPerJam;
                         $appliedVoucherDetails[] = "Gratis 1 Jam Lapangan Off-Peak (Keanggotaan): -Rp " . number_format($hargaPerJam, 0, ',', '.');
@@ -492,50 +494,50 @@ class BookingController extends Controller
                     } elseif ($jenis === 'lapangan_offpeak') {
                         $isOffPeak = (!$isWeekend && $mulai >= 7 && $mulai < 16);
                         if (!$isOffPeak) {
-                            throw new \Exception('Voucher Lapangan Off-Peak hanya berlaku jam 07:00-16:00 pada Weekdays.');
+                            throw new \Exception('Voucher Lapangan Off-Peak hanya bisa digunakan pada hari kerja (Senin-Jumat) antara jam 07:00 hingga 16:00.');
                         }
                         $usedOffPeakVouchers++;
                         if ($usedOffPeakVouchers + $usedPeakVouchers > $durasi) {
-                            throw new \Exception('Jumlah voucher gratis lapangan melebihi durasi jam sewa.');
+                            throw new \Exception('Anda mencoba menggunakan voucher lapangan lebih banyak dari durasi sewa yang dipilih.');
                         }
                         $totalDiscount += $hargaPerJam;
                         $appliedVoucherDetails[] = "Gratis 1 Jam Lapangan Off-Peak: -Rp " . number_format($hargaPerJam, 0, ',', '.');
                     } elseif ($jenis === 'lapangan_peak') {
                         $usedPeakVouchers++;
                         if ($usedOffPeakVouchers + $usedPeakVouchers > $durasi) {
-                            throw new \Exception('Jumlah voucher gratis lapangan melebihi durasi jam sewa.');
+                            throw new \Exception('Anda mencoba menggunakan voucher lapangan lebih banyak dari durasi sewa yang dipilih.');
                         }
                         $totalDiscount += $hargaPerJam;
                         $appliedVoucherDetails[] = "Gratis 1 Jam Lapangan Peak-Time: -Rp " . number_format($hargaPerJam, 0, ',', '.');
                     } elseif ($jenis === 'raket') {
                         if (!$raketFasilitas) {
-                            throw new \Exception('Voucher Gratis Sewa Raket tidak bisa digunakan: fasilitas raket tidak tersedia saat ini.');
+                            throw new \Exception('Maaf, voucher Gratis Sewa Raket belum bisa digunakan karena stok raket sedang kosong.');
                         }
                         $usedRaketVouchers++;
                         if ($qtyRaket < $usedRaketVouchers) {
-                            throw new \Exception('Voucher Gratis Sewa Raket memerlukan Anda menyewa minimal ' . $usedRaketVouchers . ' raket.');
+                            throw new \Exception("Untuk menggunakan Voucher Gratis Sewa Raket, mohon tambahkan minimal {$usedRaketVouchers} raket ke pesanan Anda.");
                         }
                         $discount = $raketFasilitas->harga;
                         $totalDiscount += $discount;
                         $appliedVoucherDetails[] = "Gratis Sewa Raket 1 Sesi: -Rp " . number_format($discount, 0, ',', '.');
                     } elseif ($jenis === 'kok_satuan') {
                         if (!$kokFasilitas) {
-                            throw new \Exception('Voucher Gratis Kok Satuan tidak bisa digunakan: fasilitas kok tidak tersedia saat ini.');
+                            throw new \Exception('Maaf, voucher Gratis Kok Satuan belum bisa digunakan karena stok kok sedang kosong.');
                         }
                         $usedKokVouchers++;
                         if ($qtyKok < $usedKokVouchers) {
-                            throw new \Exception('Voucher shuttlecock gratis memerlukan Anda menambahkan minimal ' . $usedKokVouchers . ' kok satuan.');
+                            throw new \Exception("Untuk menggunakan Voucher Gratis Kok Satuan, mohon tambahkan minimal {$usedKokVouchers} kok satuan ke pesanan Anda.");
                         }
                         $discount = $kokFasilitas->harga;
                         $totalDiscount += $discount;
                         $appliedVoucherDetails[] = "Gratis 1 Kok Satuan: -Rp " . number_format($discount, 0, ',', '.');
                     } elseif ($jenis === 'anbiyaa_water') {
                         if (!$waterFasilitas) {
-                            throw new \Exception('Voucher Gratis Anbiyaa Water tidak bisa digunakan: fasilitas air mineral tidak tersedia saat ini.');
+                            throw new \Exception('Maaf, voucher Gratis Anbiyaa Water belum bisa digunakan karena stok air mineral sedang kosong.');
                         }
                         $usedWaterVouchers++;
                         if ($qtyWater < $usedWaterVouchers) {
-                            throw new \Exception('Voucher Gratis Anbiyaa Water memerlukan Anda menambahkan minimal ' . $usedWaterVouchers . ' Air Mineral.');
+                            throw new \Exception("Untuk menggunakan Voucher Gratis Air Mineral, mohon tambahkan minimal {$usedWaterVouchers} Air Mineral ke pesanan Anda.");
                         }
                         $discount = $waterFasilitas->harga;
                         $totalDiscount += $discount;
@@ -630,10 +632,15 @@ class BookingController extends Controller
             });
 
             return redirect()->route('booking.show', $booking->id)
-                ->with('success', 'Booking berhasil! Silakan lakukan pembayaran.');
+                ->with('success', 'Pesanan berhasil dibuat! Silakan lanjutkan ke proses pembayaran.');
 
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->errorInfo[1] == 1062) {
+                return back()->withInput()->with('error', 'Mohon maaf, slot jadwal ini baru saja diambil oleh pelanggan lain. Silakan pilih waktu yang berbeda.');
+            }
+            return back()->withInput()->with('error', 'Terjadi kendala pada sistem saat memproses pesanan Anda. Silakan coba kembali.');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            return back()->withInput()->with('error', $e->getMessage());
         }
     }
 
@@ -796,6 +803,9 @@ class BookingController extends Controller
 
         try {
             DB::transaction(function () use ($request, $booking) {
+                // Kunci data lapangan untuk mencegah race condition (double booking) saat proses update
+                $lapangan = Lapangan::lockForUpdate()->find($request->lapangan_id);
+                
                 // Check overlap excluding current booking's jadwal
                 $overlap = Jadwal::where('lapangan_id', $request->lapangan_id)
                     ->where('tanggal', \Carbon\Carbon::parse($request->tanggal))
@@ -803,10 +813,10 @@ class BookingController extends Controller
                     ->where('jam_mulai', '<', $request->jam_selesai)
                     ->where('jam_selesai', '>', $request->jam_mulai)
                     ->where('id', '!=', $booking->jadwal_id)
-                    ->lockForUpdate()->exists();
+                    ->exists();
 
                 if ($overlap) {
-                    throw new \Exception('Jadwal bentrok! Lapangan sudah terpesan oleh Member atau sedang ditutup.');
+                    throw new \Exception('Mohon maaf, jadwal yang Anda pilih baru saja dipesan oleh pengguna lain atau sedang ditutup. Silakan pilih jadwal lain.');
                 }
 
                 $targetJadwal = Jadwal::updateOrCreate(
@@ -824,7 +834,6 @@ class BookingController extends Controller
                 $oldJadwalId = $booking->jadwal_id;
 
                 // Update pricing and extra amenities
-                $lapangan = Lapangan::find($request->lapangan_id);
                 $isWeekend = \Carbon\Carbon::parse($request->tanggal)->isWeekend();
                 $hargaPerJam = $isWeekend ? $lapangan->harga_weekend : $lapangan->harga_weekday;
 
@@ -866,9 +875,9 @@ class BookingController extends Controller
                                         'subtotal'     => $qty * $f->harga,
                                     ]);
                                 } else {
-                                    $pesanError = "Stok fasilitas {$f->nama} tidak mencukupi saat diubah.";
+                                    $pesanError = "Mohon maaf, stok {$f->nama} tidak mencukupi untuk jumlah yang diminta.";
                                     if ($availability['tersedia_pada']) {
-                                        $pesanError .= " Akan tersedia pada jam " . $availability['tersedia_pada'];
+                                        $pesanError .= " Fasilitas ini baru akan tersedia kembali pada jam " . $availability['tersedia_pada'] . ".";
                                     }
                                     throw new \Exception($pesanError);
                                 }
@@ -933,8 +942,13 @@ class BookingController extends Controller
             return redirect()->route('booking.show', $booking->id)
                 ->with('success', 'Pesanan berhasil diupdate! Silakan lanjutkan pembayaran.');
 
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->errorInfo[1] == 1062) {
+                return back()->withInput()->with('error', 'Mohon maaf, slot jadwal ini baru saja diambil oleh pelanggan lain. Silakan pilih waktu yang berbeda.');
+            }
+            return back()->withInput()->with('error', 'Terjadi kendala pada sistem saat memproses update pesanan Anda. Silakan coba kembali.');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            return back()->withInput()->with('error', $e->getMessage());
         }
     }
 
@@ -942,7 +956,7 @@ class BookingController extends Controller
     public function show($id)
     {
         // Pastikan pelanggan hanya bisa lihat booking miliknya sendiri
-        $booking = Booking::with(['jadwal.lapangan', 'lapangan', 'pembayaran'])
+        $booking = Booking::with(['jadwal.lapangan', 'lapangan', 'pembayaran', 'bookingFasilitas.fasilitas'])
             ->where('user_id', Auth::id())
             ->findOrFail($id);
 
@@ -955,7 +969,7 @@ class BookingController extends Controller
         // Fallback pemicu otomatisasi untuk mempermudah development tanpa background scheduler
         Booking::cancelExpiredGracefully();
 
-        $bookings = Booking::with(['jadwal', 'lapangan', 'pembayaran'])
+        $bookings = Booking::with(['jadwal', 'lapangan', 'pembayaran', 'bookingFasilitas.fasilitas'])
             ->where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->paginate(10);

@@ -13,13 +13,23 @@
             <div class="row justify-content-center">
                 <div class="col-lg-6">
                     <div class="table-card p-4">
-                        <form action="{{ route('admin.lapangan.update', $lapangan->id) }}" method="POST">
+                        <form action="{{ route('admin.lapangan.update', $lapangan->id) }}" method="POST" enctype="multipart/form-data">
                             @csrf @method('PUT')
                             <div class="mb-3">
                                 <label class="form-label fw-600 small">Nama Lapangan <span class="text-danger">*</span></label>
                                 <input type="text" name="nama_lapangan" class="form-control @error('nama_lapangan') is-invalid @enderror"
                                     value="{{ old('nama_lapangan', $lapangan->nama_lapangan) }}" required>
                                 @error('nama_lapangan')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-600 small">Foto Lapangan</label>
+                                <div class="mb-2">
+                                    <img id="fotoEditPreview" src="{{ $lapangan->foto_url }}" alt="{{ $lapangan->nama_lapangan }}" 
+                                         class="img-thumbnail rounded-3" style="max-height: 160px; object-fit: cover;">
+                                </div>
+                                <input type="file" name="foto" class="form-control @error('foto') is-invalid @enderror" accept="image/*" onchange="previewEditFoto(this)">
+                                <div class="form-text text-muted" style="font-size: .75rem;">Pilih gambar baru jika ingin mengganti foto saat ini (Maks 3MB).</div>
+                                @error('foto')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-600 small">Deskripsi</label>
@@ -58,6 +68,19 @@
                             </div>
                         </form>
                     </div>
+
+<script>
+function previewEditFoto(input) {
+    const img = document.getElementById('fotoEditPreview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            img.src = e.target.result;
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
                 </div>
             </div>
         </div>

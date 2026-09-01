@@ -13,13 +13,22 @@
             <div class="row justify-content-center">
                 <div class="col-lg-6">
                     <div class="table-card p-4">
-                        <form action="{{ route('admin.lapangan.store') }}" method="POST">
+                        <form action="{{ route('admin.lapangan.store') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="mb-3">
                                 <label class="form-label fw-600 small">Nama Lapangan <span class="text-danger">*</span></label>
                                 <input type="text" name="nama_lapangan" class="form-control @error('nama_lapangan') is-invalid @enderror"
-                                    placeholder="cth: Lapangan A" value="{{ old('nama_lapangan') }}" required>
+                                    placeholder="cth: Lapangan 1" value="{{ old('nama_lapangan') }}" required>
                                 @error('nama_lapangan')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-600 small">Foto Lapangan</label>
+                                <input type="file" name="foto" class="form-control @error('foto') is-invalid @enderror" accept="image/*" onchange="previewCreateFoto(this)">
+                                <div class="form-text text-muted" style="font-size: .75rem;">Format: JPG, PNG, WEBP. Maks 3MB.</div>
+                                @error('foto')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div id="fotoPreviewContainer" class="mt-2 d-none">
+                                    <img id="fotoPreviewImg" src="" alt="Preview Foto" class="img-thumbnail rounded-3" style="max-height: 160px; object-fit: cover;">
+                                </div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-600 small">Deskripsi</label>
@@ -61,6 +70,23 @@
                             </div>
                         </form>
                     </div>
+
+<script>
+function previewCreateFoto(input) {
+    const container = document.getElementById('fotoPreviewContainer');
+    const img = document.getElementById('fotoPreviewImg');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            img.src = e.target.result;
+            container.classList.remove('d-none');
+        }
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        container.classList.add('d-none');
+    }
+}
+</script>
                 </div>
             </div>
         </div>
