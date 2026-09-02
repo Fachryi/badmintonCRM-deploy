@@ -31,9 +31,9 @@ class CheckExpiredVouchers extends Command
             ->where('expired_date', '<=', now())
             ->get(['id', 'voucher_code', 'tipe_voucher', 'user_id']);
 
-        $count = 0;
+        $count = $expired->count();
         if (!$expired->isEmpty()) {
-            $this->warn("Ditemukan {$expired->count()} voucher status keanggotaan yang sudah melewati masa berlaku.");
+            $this->warn("Ditemukan {$count} voucher status keanggotaan yang sudah melewati masa berlaku.");
             $expiredIds = $expired->pluck('id')->toArray();
 
             \Illuminate\Support\Facades\DB::transaction(function () use ($expiredIds) {
@@ -41,7 +41,6 @@ class CheckExpiredVouchers extends Command
             });
 
             foreach ($expired as $voucher) {
-                $count++;
                 $this->line("  Voucher {$voucher->voucher_code} ({$voucher->tipe_voucher}) — User #{$voucher->user_id}");
             }
         } else {
@@ -54,9 +53,9 @@ class CheckExpiredVouchers extends Command
             ->where('kode_expired_at', '<=', now())
             ->get(['id', 'kode_voucher', 'jenis_hadiah', 'user_id']);
 
-        $redemptionCount = 0;
+        $redemptionCount = $expiredRedemptions->count();
         if (!$expiredRedemptions->isEmpty()) {
-            $this->warn("Ditemukan {$expiredRedemptions->count()} voucher redemption yang sudah melewati masa berlaku.");
+            $this->warn("Ditemukan {$redemptionCount} voucher redemption yang sudah melewati masa berlaku.");
             $redemptionIds = $expiredRedemptions->pluck('id')->toArray();
 
             \Illuminate\Support\Facades\DB::transaction(function () use ($redemptionIds) {
@@ -64,7 +63,6 @@ class CheckExpiredVouchers extends Command
             });
 
             foreach ($expiredRedemptions as $redemption) {
-                $redemptionCount++;
                 $this->line("  Redemption {$redemption->kode_display} ({$redemption->jenis_hadiah}) — User #{$redemption->user_id}");
             }
         } else {

@@ -42,8 +42,8 @@ class CheckExpiredMemberships extends Command
 
         $keteranganList = [];
         foreach ($expiredUsers as $user) {
+            // Format ini harus persis sama dengan yang disimpan di jadwal.keterangan
             $keteranganList[] = 'Slot Member: ' . $user->name;
-            $keteranganList[] = 'Slot Member: ' . $user->name . ' (#' . $user->id . ')';
         }
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($userIds, $keteranganList) {

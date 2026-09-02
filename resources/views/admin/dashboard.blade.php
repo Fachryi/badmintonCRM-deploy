@@ -374,7 +374,7 @@
                     <div>
                         <h6 class="fw-bold mb-1 text-dark"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Tren Pendapatan & Booking</h6>
                         <div class="text-muted small" style="font-size: .75rem;">
-                            Dihitung per: <strong class="text-primary">6 Bulan Terakhir</strong>
+                            Dihitung per: <strong class="text-primary">Awal Pemesanan s/d Sekarang</strong>
                         </div>
                     </div>
                 </div>

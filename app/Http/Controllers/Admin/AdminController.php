@@ -117,28 +117,49 @@ class AdminController extends Controller
         // Data Grafik Analytics (Chart.js) — Di-cache 10 menit
         $cacheKey = 'dashboard_chart_data_' . md5(json_encode([$courtFilter, $peakFilter, $paymentFilter]));
         $chartData = Cache::remember($cacheKey, 600, function () use ($courtFilter, $peakFilter, $paymentFilter) {
-            // 1. Tren Pendapatan & Booking 6 Bulan Terakhir (Tetap 6 Bulan)
+            // 1. Tren Pendapatan & Booking dari Awal Terjadinya Pemesanan
+            $earliestDate = Booking::whereIn('status', ['dipesan', 'selesai'])
+                ->min('tanggal_booking');
+            
+            $latestDate = Booking::whereIn('status', ['dipesan', 'selesai'])
+                ->max('tanggal_booking');
+
+            $startMonth = $earliestDate 
+                ? \Carbon\Carbon::parse($earliestDate)->startOfMonth()
+                : now()->subMonths(5)->startOfMonth();
+
+            $endMonth = $latestDate 
+                ? \Carbon\Carbon::parse($latestDate)->startOfMonth() 
+                : now()->startOfMonth();
+
+            if ($startMonth->gt($endMonth)) {
+                $endMonth = $startMonth->copy();
+            }
+
             $rawRevenue = Booking::whereIn('status', ['dipesan', 'selesai'])
                 ->select(
                     DB::raw("DATE_FORMAT(tanggal_booking, '%Y-%m') as bulan"),
                     DB::raw("SUM(total_harga) as total_pendapatan"),
                     DB::raw("COUNT(*) as total_booking")
                 )
-                ->where('tanggal_booking', '>=', now()->subMonths(5)->startOfMonth()->toDateString())
+                ->where('tanggal_booking', '>=', $startMonth->toDateString())
+                ->where('tanggal_booking', '<=', $endMonth->copy()->endOfMonth()->toDateString())
                 ->groupBy('bulan')
                 ->orderBy('bulan')
                 ->get();
 
             $chartRevenue = [];
-            for ($i = 5; $i >= 0; $i--) {
-                $monthKey  = now()->subMonths($i)->format('Y-m');
-                $monthName = now()->subMonths($i)->translatedFormat('F Y');
+            $currentMonth = $startMonth->copy();
+            while ($currentMonth->lte($endMonth)) {
+                $monthKey  = $currentMonth->format('Y-m');
+                $monthName = $currentMonth->translatedFormat('F Y');
                 $match     = $rawRevenue->firstWhere('bulan', $monthKey);
                 $chartRevenue[] = [
                     'bulan'            => $monthName,
                     'total_pendapatan' => $match ? (float) $match->total_pendapatan : 0,
                     'total_booking'    => $match ? (int) $match->total_booking : 0,
                 ];
+                $currentMonth->addMonth();
             }
 
             // Helper to apply filter
@@ -345,8 +366,7 @@ class AdminController extends Controller
                     // Hitung dan tambahkan Loyalty Points untuk pengguna
                     $booking->load(['jadwal', 'lapangan', 'bookingFasilitas.fasilitas']);
                     if ($booking->user_id) {
-                        $loyaltyService = new LoyaltyPointService();
-                        $poinDidapat = $loyaltyService->kreditPoinDariBooking($booking);
+                        $poinDidapat = app(LoyaltyPointService::class)->kreditPoinDariBooking($booking);
 
                         if ($poinDidapat > 0) {
                             $catatanLama = $booking->pembayaran->catatan_admin;
@@ -491,8 +511,7 @@ class AdminController extends Controller
                 ]);
 
                 if ($booking->user_id) {
-                    $loyaltyService = new LoyaltyPointService();
-                    $poinDidapat = $loyaltyService->kreditPoinDariBooking($booking);
+                    $poinDidapat = app(LoyaltyPointService::class)->kreditPoinDariBooking($booking);
 
                     if ($poinDidapat > 0) {
                         $catatanBaru = "[Loyalty +{$poinDidapat} poin → {$booking->user->name}]";
@@ -711,10 +730,9 @@ class AdminController extends Controller
         ]);
 
         $pelanggan = User::where('role', 'pelanggan')->findOrFail($id);
-        $loyaltyService = new LoyaltyPointService();
 
         try {
-            $loyaltyService->sesuaikanPoinManual(
+            app(LoyaltyPointService::class)->sesuaikanPoinManual(
                 $pelanggan,
                 $request->tipe,
                 (int) $request->jumlah_poin,

@@ -102,8 +102,7 @@ class MidtransWebhookController extends Controller
                     // Hitung dan tambahkan Loyalty Points untuk pengguna
                     $booking->load(['jadwal', 'lapangan', 'bookingFasilitas.fasilitas']);
                     if ($booking->user_id) {
-                        $loyaltyService = new \App\Services\LoyaltyPointService();
-                        $poinDidapat = $loyaltyService->kreditPoinDariBooking($booking);
+                        $poinDidapat = app(\App\Services\LoyaltyPointService::class)->kreditPoinDariBooking($booking);
 
                         if ($poinDidapat > 0) {
                             $catatanLama = $pembayaran->catatan_admin;
@@ -124,7 +123,7 @@ class MidtransWebhookController extends Controller
                     $booking->status = 'dibatalkan'; 
                     $booking->save();
 
-                    // Free up the schedule if no other bookings are holding it
+                    // Bebaskan jadwal jika tidak ada booking aktif lain yang menahannya
                     if ($booking->jadwal) {
                         $adaBookingAktif = Booking::where('jadwal_id', $booking->jadwal_id)
                             ->where('id', '!=', $booking->id)

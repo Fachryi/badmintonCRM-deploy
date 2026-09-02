@@ -63,11 +63,13 @@ Route::post('/webhook/midtrans', [\App\Http\Controllers\MidtransWebhookControlle
  * Middleware 'guest' mencegah user yang sudah login mengakses /login & /register.
  * Jika sudah login lalu akses /login → redirect ke home.
  */
-Route::middleware(['guest', 'throttle:10,1'])->group(function () {
+Route::middleware('guest')->group(function () {
     Route::get('/login',     [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login',    [AuthController::class, 'login'])->name('login.post');
     Route::get('/register',  [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.post')->middleware('throttle:10,1');
+
+    // Login diberi throttle lebih ketat — maks 5 percobaan per menit per IP untuk mencegah brute-force
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
 });
 
 // Logout — harus sudah login

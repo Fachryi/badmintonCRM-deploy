@@ -29,7 +29,7 @@
                     <div class="col">
                         <a href="{{ $isOffline ? 'javascript:void(0)' : route('admin.crm.pelanggan.detail', $tp->id) }}" 
                            class="text-decoration-none p-3 rounded-3 h-100 d-flex flex-column justify-content-between top-customer-card" 
-                           style="background:rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); cursor:{{ $isOffline ? 'default' : 'pointer' }}; transition: all .25s ease;"
+                           style="background:rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); cursor:{{ $isOffline ? 'default' : 'pointer' }}; transition: all .25s ease; overflow: hidden;"
                            data-bs-toggle="popover" 
                            data-bs-trigger="hover focus"
                            data-bs-placement="bottom"
@@ -46,17 +46,17 @@
                                 </div>
                              ">
                             <div>
-                                <div class="d-flex align-items-center gap-2 mb-3 min-w-0">
-                                    <span class="badge rounded-circle d-flex align-items-center justify-content-center fw-bold text-white flex-shrink-0"
-                                          style="width:26px; height:26px; font-size: 0.8rem; background:{{ $i==0 ? 'linear-gradient(135deg, #f59e0b, #d97706)' : ($i==1 ? 'linear-gradient(135deg, #94a3b8, #64748b)' : ($i==2 ? 'linear-gradient(135deg, #cd7c2e, #b45309)' : 'linear-gradient(135deg, #475569, #334155)')) }}; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
-                                        {{ $i+1 }}
-                                    </span>
-                                    <div class="d-flex align-items-center gap-2 min-w-0 flex-grow-1">
-                                        <span class="fw-semibold text-white text-truncate" style="font-size:.9rem;" title="{{ $tp->name }}">{{ $tp->name }}</span>
-                                        @if($isOffline)
-                                            <span class="badge bg-secondary flex-shrink-0" style="font-size:.6rem; padding: 3px 6px; opacity: 0.85;">Offline</span>
-                                        @endif
+                                <div class="d-flex align-items-center justify-content-between gap-1 mb-3 overflow-hidden" style="min-width: 0;">
+                                    <div class="d-flex align-items-center gap-2 overflow-hidden me-1" style="min-width: 0; flex: 1 1 auto;">
+                                        <span class="badge rounded-circle d-flex align-items-center justify-content-center fw-bold text-white flex-shrink-0"
+                                              style="width:26px; height:26px; font-size: 0.8rem; background:{{ $i==0 ? 'linear-gradient(135deg, #f59e0b, #d97706)' : ($i==1 ? 'linear-gradient(135deg, #94a3b8, #64748b)' : ($i==2 ? 'linear-gradient(135deg, #cd7c2e, #b45309)' : 'linear-gradient(135deg, #475569, #334155)')) }}; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+                                            {{ $i+1 }}
+                                        </span>
+                                        <span class="fw-semibold text-white text-truncate" style="font-size:.88rem; min-width: 0; flex: 1 1 auto;" title="{{ $tp->name }}">{{ $tp->name }}</span>
                                     </div>
+                                    @if($isOffline)
+                                        <span class="badge bg-secondary flex-shrink-0" style="font-size:.6rem; padding: 3px 6px; opacity: 0.85;">Offline</span>
+                                    @endif
                                 </div>
                             </div>
                             <div class="mt-auto">

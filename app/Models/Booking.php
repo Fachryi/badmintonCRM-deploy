@@ -10,7 +10,7 @@ class Booking extends Model
     use \App\Traits\NormalizePhoneNumber;
     protected $fillable = [
         'user_id', 'jadwal_id', 'lapangan_id',
-        'tanggal_booking', 'total_harga', 'snap_token', 'status', 'catatan', 'fasilitas',
+        'tanggal_booking', 'total_harga', 'status', 'catatan', 'fasilitas',
         'is_offline', 'nama_pemesan_offline', 'no_hp_offline',
         'rating', 'ulasan', 'is_tampil_beranda', 'reward_applied', 'voucher_id',
     ];
@@ -62,8 +62,7 @@ class Booking extends Model
                     ]);
 
                     if ($wasConfirmed) {
-                        $loyaltyService = new \App\Services\LoyaltyPointService();
-                        $loyaltyService->debitPoinDariBatalBooking($booking);
+                        app(\App\Services\LoyaltyPointService::class)->debitPoinDariBatalBooking($booking);
                     }
                 }
             }
@@ -86,8 +85,7 @@ class Booking extends Model
             if (in_array($booking->status, ['dipesan', 'selesai'])) {
                 $booking->adjustFasilitasStock('increment');
 
-                $loyaltyService = new \App\Services\LoyaltyPointService();
-                $loyaltyService->debitPoinDariBatalBooking($booking);
+                app(\App\Services\LoyaltyPointService::class)->debitPoinDariBatalBooking($booking);
             }
 
             // Reset status jadwal ke 'tersedia' jika tidak ada booking aktif lain untuk jadwal ini

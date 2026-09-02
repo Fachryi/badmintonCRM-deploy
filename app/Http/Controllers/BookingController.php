@@ -39,51 +39,8 @@ class BookingController extends Controller
             ->orderBy('jam_mulai')
             ->get();
 
-        // ── MERGE VIRTUAL MEMBER SCHEDULES ──
-        $dayNames = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
-        $dayOfWeek = $dayNames[\Carbon\Carbon::parse($tanggal)->dayOfWeek];
-        $memberPayments = \App\Models\MembershipPayment::where('hari', $dayOfWeek)
-            ->whereIn('status_verifikasi', ['menunggu', 'diverifikasi'])
-            ->where(function ($q) use ($tanggal) {
-                $q->where('status_verifikasi', 'menunggu')
-                  ->orWhereHas('user', function ($qu) use ($tanggal) {
-                      $qu->whereIn('kategori_member', ['member', 'weekday_pagi', 'weekday_malam', 'weekend'])
-                        ->where(function ($query) use ($tanggal) {
-                            $query->whereNull('membership_expires_at')
-                                  ->orWhere('membership_expires_at', '>=', \Carbon\Carbon::parse($tanggal)->startOfDay());
-                        });
-                  });
-            })
-            ->get();
-
-        foreach ($memberPayments as $mp) {
-            $existsInDb = $jadwals->first(function ($j) use ($mp) {
-                return $j->lapangan_id === $mp->lapangan_id &&
-                       $j->jam_mulai < $mp->jam_selesai &&
-                       $j->jam_selesai > $mp->jam_mulai;
-            });
-
-            if (!$existsInDb) {
-                $vJadwal = new Jadwal([
-                    'lapangan_id' => $mp->lapangan_id,
-                    'tanggal'     => $tanggal,
-                    'jam_mulai'   => $mp->jam_mulai,
-                    'jam_selesai' => $mp->jam_selesai,
-                    'status'      => 'dipesan',
-                    'keterangan'  => 'Slot Member: ' . ($mp->user->name ?? 'Calon Member'),
-                ]);
-                $vJadwal->id = 'virtual-' . $mp->id;
-                $vJadwal->setRelation('lapangan', $mp->lapangan);
-
-                $vBooking = new Booking([
-                    'is_offline' => false,
-                ]);
-                $vBooking->setRelation('user', $mp->user);
-                $vJadwal->setRelation('booking', $vBooking);
-
-                $jadwals->push($vJadwal);
-            }
-        }
+        // Gabungkan jadwal virtual dari sesi rutin member aktif/pending
+        $jadwals = $this->mergeVirtualMemberSchedules($jadwals, $tanggal);
 
         $liburs = HariLibur::where('tanggal', $tanggal)->get();
         $fasilitas_list = \App\Models\Fasilitas::where('is_active', true)->get();
@@ -251,25 +208,7 @@ class BookingController extends Controller
         }
 
         // Cek apakah bentrok dengan slot rutin member (aktif atau pending)
-        $dayNames = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
-        $dayOfWeek = $dayNames[\Carbon\Carbon::parse($request->tanggal)->dayOfWeek];
-        $overlapMember = \App\Models\MembershipPayment::where('lapangan_id', $request->lapangan_id)
-            ->where('hari', $dayOfWeek)
-            ->whereIn('status_verifikasi', ['menunggu', 'diverifikasi'])
-            ->where('jam_mulai', '<', $request->jam_selesai)
-            ->where('jam_selesai', '>', $request->jam_mulai)
-            ->where(function($q) use ($request) {
-                $q->where('status_verifikasi', 'menunggu')
-                  ->orWhereHas('user', function($qu) use ($request) {
-                      $qu->whereIn('kategori_member', ['member', 'weekday_pagi', 'weekday_malam', 'weekend'])
-                        ->where(function ($query) use ($request) {
-                            $query->whereNull('membership_expires_at')
-                                  ->orWhere('membership_expires_at', '>=', \Carbon\Carbon::parse($request->tanggal)->startOfDay());
-                        });
-                  });
-            })
-            ->first();
-
+        $overlapMember = $this->findMemberOverlap((int) $request->lapangan_id, $request->tanggal, $request->jam_mulai, $request->jam_selesai);
         if ($overlapMember) {
             $namaMember = $overlapMember->user->name ?? 'Calon Member';
             return back()->withInput()->with('error', 'Pemesanan gagal. Slot waktu ini sudah terisi oleh slot rutin member (' . $namaMember . ').');
@@ -390,8 +329,7 @@ class BookingController extends Controller
                 if ($request->filled('direct_redeem_jenis')) {
                     $jenisHadiah = $request->direct_redeem_jenis;
                     $user = auth()->user();
-                    $loyaltyService = new \App\Services\LoyaltyPointService();
-                    $directRedemption = $loyaltyService->tukarPoin($user, $jenisHadiah);
+                    $directRedemption = app(\App\Services\LoyaltyPointService::class)->tukarPoin($user, $jenisHadiah);
                     $appliedRedemptions->push($directRedemption);
                 }
 
@@ -672,51 +610,8 @@ class BookingController extends Controller
 
         $jadwals = $jadwalsQuery->orderBy('jam_mulai')->get();
 
-        // ── MERGE VIRTUAL MEMBER SCHEDULES ──
-        $dayNames = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
-        $dayOfWeek = $dayNames[\Carbon\Carbon::parse($tanggal)->dayOfWeek];
-        $memberPayments = \App\Models\MembershipPayment::where('hari', $dayOfWeek)
-            ->whereIn('status_verifikasi', ['menunggu', 'diverifikasi'])
-            ->where(function ($q) use ($tanggal) {
-                $q->where('status_verifikasi', 'menunggu')
-                  ->orWhereHas('user', function ($qu) use ($tanggal) {
-                      $qu->whereIn('kategori_member', ['member', 'weekday_pagi', 'weekday_malam', 'weekend'])
-                        ->where(function ($query) use ($tanggal) {
-                            $query->whereNull('membership_expires_at')
-                                  ->orWhere('membership_expires_at', '>=', \Carbon\Carbon::parse($tanggal)->startOfDay());
-                        });
-                  });
-            })
-            ->get();
-
-        foreach ($memberPayments as $mp) {
-            $existsInDb = $jadwals->first(function ($j) use ($mp) {
-                return $j->lapangan_id === $mp->lapangan_id &&
-                       $j->jam_mulai < $mp->jam_selesai &&
-                       $j->jam_selesai > $mp->jam_mulai;
-            });
-
-            if (!$existsInDb) {
-                $vJadwal = new Jadwal([
-                    'lapangan_id' => $mp->lapangan_id,
-                    'tanggal'     => $tanggal,
-                    'jam_mulai'   => $mp->jam_mulai,
-                    'jam_selesai' => $mp->jam_selesai,
-                    'status'      => 'dipesan',
-                    'keterangan'  => 'Slot Member: ' . ($mp->user->name ?? 'Calon Member'),
-                ]);
-                $vJadwal->id = 'virtual-' . $mp->id;
-                $vJadwal->setRelation('lapangan', $mp->lapangan);
-
-                $vBooking = new Booking([
-                    'is_offline' => false,
-                ]);
-                $vBooking->setRelation('user', $mp->user);
-                $vJadwal->setRelation('booking', $vBooking);
-
-                $jadwals->push($vJadwal);
-            }
-        }
+        // Gabungkan jadwal virtual dari sesi rutin member aktif/pending
+        $jadwals = $this->mergeVirtualMemberSchedules($jadwals, $tanggal);
 
         if ($request->ajax()) {
             return response()->json([
@@ -777,25 +672,7 @@ class BookingController extends Controller
         }
 
         // Cek apakah bentrok dengan slot rutin member (aktif atau pending)
-        $dayNames = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
-        $dayOfWeek = $dayNames[\Carbon\Carbon::parse($request->tanggal)->dayOfWeek];
-        $overlapMember = \App\Models\MembershipPayment::where('lapangan_id', $request->lapangan_id)
-            ->where('hari', $dayOfWeek)
-            ->whereIn('status_verifikasi', ['menunggu', 'diverifikasi'])
-            ->where('jam_mulai', '<', $request->jam_selesai)
-            ->where('jam_selesai', '>', $request->jam_mulai)
-            ->where(function($q) use ($request) {
-                $q->where('status_verifikasi', 'menunggu')
-                  ->orWhereHas('user', function($qu) use ($request) {
-                      $qu->whereIn('kategori_member', ['member', 'weekday_pagi', 'weekday_malam', 'weekend'])
-                        ->where(function ($query) use ($request) {
-                            $query->whereNull('membership_expires_at')
-                                  ->orWhere('membership_expires_at', '>=', \Carbon\Carbon::parse($request->tanggal)->startOfDay());
-                        });
-                  });
-            })
-            ->first();
-
+        $overlapMember = $this->findMemberOverlap((int) $request->lapangan_id, $request->tanggal, $request->jam_mulai, $request->jam_selesai);
         if ($overlapMember) {
             $namaMember = $overlapMember->user->name ?? 'Calon Member';
             return back()->withInput()->with('error', 'Update gagal. Slot waktu ini sudah terisi oleh slot rutin member (' . $namaMember . ').');
@@ -1050,5 +927,88 @@ class BookingController extends Controller
         ]);
 
         return back()->with('success', 'Terima kasih! Ulasan Anda telah disimpan.');
+    }
+
+    /**
+     * Menggabungkan jadwal virtual dari sesi rutin member aktif/menunggu verifikasi
+     * ke dalam koleksi jadwal database yang sedang aktif pada tanggal tertentu.
+     */
+    private function mergeVirtualMemberSchedules($jadwals, string $tanggal)
+    {
+        $dayNames = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
+        $dayOfWeek = $dayNames[\Carbon\Carbon::parse($tanggal)->dayOfWeek];
+
+        $memberPayments = \App\Models\MembershipPayment::where('hari', $dayOfWeek)
+            ->whereIn('status_verifikasi', ['menunggu', 'diverifikasi'])
+            ->where(function ($q) use ($tanggal) {
+                $q->where('status_verifikasi', 'menunggu')
+                  ->orWhereHas('user', function ($qu) use ($tanggal) {
+                      $qu->whereIn('kategori_member', ['member', 'weekday_pagi', 'weekday_malam', 'weekend'])
+                        ->where(function ($query) use ($tanggal) {
+                            $query->whereNull('membership_expires_at')
+                                  ->orWhere('membership_expires_at', '>=', \Carbon\Carbon::parse($tanggal)->startOfDay());
+                        });
+                  });
+            })
+            ->with(['lapangan', 'user'])
+            ->get();
+
+        foreach ($memberPayments as $mp) {
+            $existsInDb = $jadwals->first(function ($j) use ($mp) {
+                return $j->lapangan_id === $mp->lapangan_id &&
+                       $j->jam_mulai < $mp->jam_selesai &&
+                       $j->jam_selesai > $mp->jam_mulai;
+            });
+
+            if (!$existsInDb) {
+                $vJadwal = new Jadwal([
+                    'lapangan_id' => $mp->lapangan_id,
+                    'tanggal'     => $tanggal,
+                    'jam_mulai'   => $mp->jam_mulai,
+                    'jam_selesai' => $mp->jam_selesai,
+                    'status'      => 'dipesan',
+                    'keterangan'  => 'Slot Member: ' . ($mp->user->name ?? 'Calon Member'),
+                ]);
+                $vJadwal->id = 'virtual-' . $mp->id;
+                $vJadwal->setRelation('lapangan', $mp->lapangan);
+
+                $vBooking = new Booking([
+                    'is_offline' => false,
+                ]);
+                $vBooking->setRelation('user', $mp->user);
+                $vJadwal->setRelation('booking', $vBooking);
+
+                $jadwals->push($vJadwal);
+            }
+        }
+
+        return $jadwals;
+    }
+
+    /**
+     * Memeriksa apakah rentang waktu yang diminta bertabrakan dengan jadwal rutin member.
+     */
+    private function findMemberOverlap(int $lapanganId, string $tanggal, string $jamMulai, string $jamSelesai): ?\App\Models\MembershipPayment
+    {
+        $dayNames = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
+        $dayOfWeek = $dayNames[\Carbon\Carbon::parse($tanggal)->dayOfWeek];
+
+        return \App\Models\MembershipPayment::where('lapangan_id', $lapanganId)
+            ->where('hari', $dayOfWeek)
+            ->whereIn('status_verifikasi', ['menunggu', 'diverifikasi'])
+            ->where('jam_mulai', '<', $jamSelesai)
+            ->where('jam_selesai', '>', $jamMulai)
+            ->where(function ($q) use ($tanggal) {
+                $q->where('status_verifikasi', 'menunggu')
+                  ->orWhereHas('user', function ($qu) use ($tanggal) {
+                      $qu->whereIn('kategori_member', ['member', 'weekday_pagi', 'weekday_malam', 'weekend'])
+                        ->where(function ($query) use ($tanggal) {
+                            $query->whereNull('membership_expires_at')
+                                  ->orWhere('membership_expires_at', '>=', \Carbon\Carbon::parse($tanggal)->startOfDay());
+                        });
+                  });
+            })
+            ->with('user')
+            ->first();
     }
 }

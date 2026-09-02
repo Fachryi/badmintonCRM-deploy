@@ -84,17 +84,14 @@ class Fasilitas extends Model
         $testStart = Carbon::parse($jamMulai)->format('H:i');
         $testEnd = Carbon::parse($jamSelesai)->format('H:i');
 
-        $testStartMins = (int)explode(':', $testStart)[0] * 60 + (int)explode(':', $testStart)[1];
-        $testEndMins   = (int)explode(':', $testEnd)[0]   * 60 + (int)explode(':', $testEnd)[1];
+        $testStartMins = $this->timeToMinutes($testStart);
+        $testEndMins   = $this->timeToMinutes($testEnd);
 
         $rentedCurrent = 0;
         foreach ($activeBookings as $booking) {
             if ($booking->jadwal) {
-                $start = Carbon::parse($booking->jadwal->jam_mulai)->format('H:i');
-                $end = Carbon::parse($booking->jadwal->jam_selesai)->format('H:i');
-
-                $startMins = (int)explode(':', $start)[0] * 60 + (int)explode(':', $start)[1];
-                $endMins   = (int)explode(':', $end)[0]   * 60 + (int)explode(':', $end)[1];
+                $startMins = $this->timeToMinutes($booking->jadwal->jam_mulai);
+                $endMins   = $this->timeToMinutes($booking->jadwal->jam_selesai);
 
                 // Cek overlap dengan perbandingan menit integer
                 if ($startMins < $testEndMins && $endMins > $testStartMins) {
@@ -122,16 +119,13 @@ class Fasilitas extends Model
             $events = [];
             foreach ($activeBookings as $booking) {
                 if ($booking->jadwal) {
-                    $start = Carbon::parse($booking->jadwal->jam_mulai)->format('H:i');
-                    $end = Carbon::parse($booking->jadwal->jam_selesai)->format('H:i');
-
-                    $startMins = (int)explode(':', $start)[0] * 60 + (int)explode(':', $start)[1];
-                    $endMins   = (int)explode(':', $end)[0]   * 60 + (int)explode(':', $end)[1];
+                    $startMins = $this->timeToMinutes($booking->jadwal->jam_mulai);
+                    $endMins   = $this->timeToMinutes($booking->jadwal->jam_selesai);
 
                     // Kita hanya peduli booking yang overlap dengan waktu pencarian
                     if ($startMins < $testEndMins && $endMins > $testStartMins) {
                         $events[] = [
-                            'time' => $end,
+                            'time' => Carbon::parse($booking->jadwal->jam_selesai)->format('H:i'),
                             'time_mins' => $endMins,
                             'qty' => $booking->bookingFasilitas->where('fasilitas_id', $this->id)->sum('jumlah')
                         ];
@@ -151,7 +145,7 @@ class Fasilitas extends Model
                 $simulatedAvailable = $totalStok - $simulatedRented;
 
                 if ($simulatedAvailable >= $requestedQty) {
-                    $nextAvailableTime = Carbon::parse($event['time'])->format('H:i');
+                    $nextAvailableTime = $event['time'];
                     break;
                 }
             }
@@ -162,5 +156,14 @@ class Fasilitas extends Model
             'sisa_stok' => $availableCurrent < 0 ? 0 : $availableCurrent,
             'tersedia_pada' => $nextAvailableTime
         ];
+    }
+
+    /**
+     * Konversi string waktu (H:i atau H:i:s) ke total menit sejak tengah malam.
+     */
+    private function timeToMinutes(string $time): int
+    {
+        $parts = explode(':', $time);
+        return ((int) $parts[0] * 60) + ((int) ($parts[1] ?? 0));
     }
 }
