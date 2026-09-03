@@ -52,7 +52,9 @@ return [
     |
     */
 
-    'url' => filter_var(env('APP_URL'), FILTER_VALIDATE_URL) ? env('APP_URL') : 'http://localhost',
+    'url' => filter_var(env('APP_URL'), FILTER_VALIDATE_URL) 
+        ? env('APP_URL') 
+        : (env('RAILWAY_PUBLIC_DOMAIN') ? 'https://' . env('RAILWAY_PUBLIC_DOMAIN') : 'https://anbiyaasport.up.railway.app'),
 
     /*
     |--------------------------------------------------------------------------
@@ -97,7 +99,7 @@ return [
 
     'cipher' => 'AES-256-CBC',
 
-    'key' => env('APP_KEY'),
+    'key' => env('APP_KEY') ?: 'base64:2oifJWwG2R4Coo2JUqxDToZIlspMMXdHPs/dAoci8UA=',
 
     'previous_keys' => [
         ...array_filter(

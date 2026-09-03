@@ -68,8 +68,8 @@ Route::middleware('guest')->group(function () {
     Route::get('/register',  [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.post')->middleware('throttle:10,1');
 
-    // Login diberi throttle lebih ketat — maks 5 percobaan per menit per IP untuk mencegah brute-force
-    Route::post('/login', [AuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
+    // Login diberi throttle — maks 15 percobaan per menit per IP untuk mencegah brute-force
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post')->middleware('throttle:15,1');
 });
 
 // Logout — harus sudah login
