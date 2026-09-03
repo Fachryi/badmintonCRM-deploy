@@ -19,7 +19,11 @@
     <div class="card-500">
         <div class="icon-500">🛠️</div>
         <h4 class="fw-bold mb-2">Kesalahan Internal Server</h4>
-        <p class="text-secondary mb-4">Mohon maaf, terjadi gangguan pada sistem internal kami. Tim teknis kami telah diberitahu dan sedang memperbaikinya.</p>
+        @if(isset($exception) && $exception->getMessage())
+            <div class="alert alert-danger text-start small mb-3 p-2 font-monospace" style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; font-size:0.75rem; word-break:break-all;">
+                <strong>Detail:</strong> {{ $exception->getMessage() }}
+            </div>
+        @endif
         <a href="/" class="btn btn-home">
             Kembali ke Dashboard
         </a>
