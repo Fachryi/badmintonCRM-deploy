@@ -103,6 +103,56 @@ INSERT INTO `bookings` VALUES (2021,NULL,3377,1,'2025-12-02',150000.00,NULL,'sel
 UNLOCK TABLES;
 
 --
+-- Table structure for table `cache`
+--
+
+DROP TABLE IF EXISTS `cache`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `cache` (
+  `key` varchar(255) NOT NULL,
+  `value` mediumtext NOT NULL,
+  `expiration` bigint(20) NOT NULL,
+  PRIMARY KEY (`key`),
+  KEY `cache_expiration_index` (`expiration`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `cache`
+--
+
+LOCK TABLES `cache` WRITE;
+/*!40000 ALTER TABLE `cache` DISABLE KEYS */;
+/*!40000 ALTER TABLE `cache` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `cache_locks`
+--
+
+DROP TABLE IF EXISTS `cache_locks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `cache_locks` (
+  `key` varchar(255) NOT NULL,
+  `owner` varchar(255) NOT NULL,
+  `expiration` bigint(20) NOT NULL,
+  PRIMARY KEY (`key`),
+  KEY `cache_locks_expiration_index` (`expiration`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `cache_locks`
+--
+
+LOCK TABLES `cache_locks` WRITE;
+/*!40000 ALTER TABLE `cache_locks` DISABLE KEYS */;
+/*!40000 ALTER TABLE `cache_locks` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `fasilitas`
 --
 
@@ -285,7 +335,7 @@ CREATE TABLE `migrations` (
   `migration` varchar(255) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -294,7 +344,7 @@ CREATE TABLE `migrations` (
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'0001_01_01_000000_create_users_table',1),(2,'2024_01_01_000001_create_lapangan_table',1),(3,'2024_01_01_000002_create_jadwal_table',1),(4,'2024_01_01_000003_create_bookings_table',1),(5,'2024_01_01_000004_create_pembayaran_table',1),(6,'2026_05_05_155831_make_bukti_pembayaran_nullable_in_pembayaran_table',1),(7,'2026_05_05_172844_remove_unique_from_jadwal_id_in_bookings_table',1),(8,'2026_05_05_172926_add_pending_status_to_jadwal_table',1),(9,'2026_05_05_183210_add_fasilitas_to_bookings_table',1),(10,'2026_05_06_130955_add_snap_token_to_bookings_table',1),(11,'2026_05_06_134219_update_bookings_status_enum',1),(12,'2026_05_12_063143_alter_jadwal_status_enum',1),(13,'2026_05_12_064541_create_hari_liburs_table',1),(14,'2026_05_12_073933_add_keterangan_to_jadwal_table',1),(15,'2026_05_13_185245_add_offline_fields_to_bookings_table',1),(16,'2026_05_13_185251_add_ditutup_status_to_jadwal_table',1),(17,'2026_05_15_000001_add_kedaluwarsa_to_pembayaran_status_verifikasi',1),(18,'2026_05_18_004328_create_fasilitas_table',1),(19,'2026_05_18_004416_create_booking_fasilitas_table',1),(20,'2026_05_18_203654_add_ulasan_to_bookings_table',1),(21,'2026_05_22_000001_add_performance_indexes',1),(22,'2026_05_22_181333_add_reward_applied_to_bookings_table',1),(23,'2026_05_23_000001_add_loyalty_fields_to_users_table',1),(24,'2026_05_23_000002_create_points_history_table',1),(25,'2026_05_23_000003_create_redemptions_table',1),(26,'2026_05_23_173113_add_booking_id_to_redemptions_table',1),(27,'2026_05_26_000001_update_tables_for_loyalty_system',1),(28,'2026_05_28_180000_create_membership_payments_table',1),(29,'2026_05_28_190000_change_metode_pembayaran_in_membership_payments_table',1),(30,'2026_06_02_203444_add_index_to_membership_payments',1),(31,'2026_06_04_000001_add_schedule_fields_to_membership_payments_table',1),(32,'2026_06_04_000002_expand_kategori_member_enum',1),(33,'2026_06_08_013043_add_missing_performance_indexes',1),(34,'2026_06_09_000001_add_anbiyaa_water_to_redemptions_jenis_hadiah',1),(35,'2026_06_09_150000_drop_redundant_indexes_from_loyalty_tables',1),(36,'2026_06_09_160000_drop_redundant_indexes_from_bookings_table',1),(37,'2026_06_11_000000_add_username_and_make_email_nullable_in_users_table',1),(38,'2026_07_07_023607_make_nomor_hp_unique_in_users_table',2),(40,'2026_07_08_214000_drop_email_columns_from_users_table',3),(41,'2026_07_09_220224_add_membership_expires_at_to_users_table',4),(42,'2026_07_09_220702_add_membership_expires_at_to_users_table',5),(43,'2026_07_10_150016_drop_password_reset_tokens_table',6),(44,'2026_07_10_160000_add_additional_performance_indexes',7),(45,'2026_07_18_000001_create_sessions_table',8),(46,'2026_08_04_000001_add_index_to_fasilitas_is_active',9),(47,'2026_09_02_000001_add_composite_performance_indexes',10);
+INSERT INTO `migrations` VALUES (1,'0001_01_01_000000_create_users_table',1),(2,'2024_01_01_000001_create_lapangan_table',1),(3,'2024_01_01_000002_create_jadwal_table',1),(4,'2024_01_01_000003_create_bookings_table',1),(5,'2024_01_01_000004_create_pembayaran_table',1),(6,'2026_05_05_155831_make_bukti_pembayaran_nullable_in_pembayaran_table',1),(7,'2026_05_05_172844_remove_unique_from_jadwal_id_in_bookings_table',1),(8,'2026_05_05_172926_add_pending_status_to_jadwal_table',1),(9,'2026_05_05_183210_add_fasilitas_to_bookings_table',1),(10,'2026_05_06_130955_add_snap_token_to_bookings_table',1),(11,'2026_05_06_134219_update_bookings_status_enum',1),(12,'2026_05_12_063143_alter_jadwal_status_enum',1),(13,'2026_05_12_064541_create_hari_liburs_table',1),(14,'2026_05_12_073933_add_keterangan_to_jadwal_table',1),(15,'2026_05_13_185245_add_offline_fields_to_bookings_table',1),(16,'2026_05_13_185251_add_ditutup_status_to_jadwal_table',1),(17,'2026_05_15_000001_add_kedaluwarsa_to_pembayaran_status_verifikasi',1),(18,'2026_05_18_004328_create_fasilitas_table',1),(19,'2026_05_18_004416_create_booking_fasilitas_table',1),(20,'2026_05_18_203654_add_ulasan_to_bookings_table',1),(21,'2026_05_22_000001_add_performance_indexes',1),(22,'2026_05_22_181333_add_reward_applied_to_bookings_table',1),(23,'2026_05_23_000001_add_loyalty_fields_to_users_table',1),(24,'2026_05_23_000002_create_points_history_table',1),(25,'2026_05_23_000003_create_redemptions_table',1),(26,'2026_05_23_173113_add_booking_id_to_redemptions_table',1),(27,'2026_05_26_000001_update_tables_for_loyalty_system',1),(28,'2026_05_28_180000_create_membership_payments_table',1),(29,'2026_05_28_190000_change_metode_pembayaran_in_membership_payments_table',1),(30,'2026_06_02_203444_add_index_to_membership_payments',1),(31,'2026_06_04_000001_add_schedule_fields_to_membership_payments_table',1),(32,'2026_06_04_000002_expand_kategori_member_enum',1),(33,'2026_06_08_013043_add_missing_performance_indexes',1),(34,'2026_06_09_000001_add_anbiyaa_water_to_redemptions_jenis_hadiah',1),(35,'2026_06_09_150000_drop_redundant_indexes_from_loyalty_tables',1),(36,'2026_06_09_160000_drop_redundant_indexes_from_bookings_table',1),(37,'2026_06_11_000000_add_username_and_make_email_nullable_in_users_table',1),(38,'2026_07_07_023607_make_nomor_hp_unique_in_users_table',2),(40,'2026_07_08_214000_drop_email_columns_from_users_table',3),(41,'2026_07_09_220224_add_membership_expires_at_to_users_table',4),(42,'2026_07_09_220702_add_membership_expires_at_to_users_table',5),(43,'2026_07_10_150016_drop_password_reset_tokens_table',6),(44,'2026_07_10_160000_add_additional_performance_indexes',7),(45,'2026_07_18_000001_create_sessions_table',8),(46,'2026_08_04_000001_add_index_to_fasilitas_is_active',9),(47,'2026_09_02_000001_add_composite_performance_indexes',10),(48,'2026_09_03_161735_create_cache_table',11);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -441,7 +491,7 @@ CREATE TABLE `sessions` (
 
 LOCK TABLES `sessions` WRITE;
 /*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
-INSERT INTO `sessions` VALUES ('4pJQwX2qgQhe5OfOz1gOTvOEzYGeVQU0znEtA4dH',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9168','YTozOntzOjY6Il90b2tlbiI7czo0MDoiVWZoTnNLZ0tCVmNTRWRsR01jNlc2QlJRZFlPZ0J4aGJvaGJqenFxMCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Mjc6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9sb2dpbiI7czo1OiJyb3V0ZSI7czo1OiJsb2dpbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=',1788418738),('Bniwne9S4jIemtp7XOHQn8ZuBv000qUStotGMB2L',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9168','YTozOntzOjY6Il90b2tlbiI7czo0MDoid1MzZGJLMVlLMWVLTUxHMHFkeVd0Vk5zRzdTUGFJTGkzQzBpbDZ3SyI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7czo0OiJob21lIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==',1788418727),('MFTigliONwooEJJjK1p2Fl7HzieY1DgnwEo63Quc',1,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0','YTo0OntzOjY6Il90b2tlbiI7czo0MDoienVpYUY0VlltN0ROeGpjSjlwN2RFdnJDcHBVSEhKU1ppdHd3SnpTRiI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NDU6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi9hcGkvcGVuZGluZy12ZXJpZiI7czo1OiJyb3V0ZSI7czoyMzoiYWRtaW4uYXBpLnBlbmRpbmctdmVyaWYiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=',1788374450),('mQDngJH3V4xUHJlFiSQTvReigojCtggTNdmlmiym',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9168','YTozOntzOjY6Il90b2tlbiI7czo0MDoiZmFNUFNFbmJBSWNlZlBlVEtoR0lqZXlPMG16ZmlOVERPZFk5dnppTiI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Mjg6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9qYWR3YWwiO3M6NToicm91dGUiO3M6MTI6ImphZHdhbC5pbmRleCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=',1788418738),('NTGLAVqMdDISwgfEqAq8eKCTscgE2v0WzBOPjtc8',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0','YTozOntzOjY6Il90b2tlbiI7czo0MDoidnhQaE10NWdxcXh3N1Rwc2I5S2Z6S2ZJaVk3YlBmeGFFRkVkb0ZKaiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJuZXciO2E6MDp7fXM6Mzoib2xkIjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7czo0OiJob21lIjt9fQ==',1788354884),('pMRgwRwmdiQIzUwz5rFMMQuzFvpwt9wSmtPexoWv',1,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0','YTo0OntzOjY6Il90b2tlbiI7czo0MDoicGVNelAyU0FudlNYRnptQ3hSdk1CaDhaUlBuZGxHSWZrNUJoRWxUQiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJuZXciO2E6MDp7fXM6Mzoib2xkIjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NDU6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi9hcGkvcGVuZGluZy12ZXJpZiI7czo1OiJyb3V0ZSI7czoyMzoiYWRtaW4uYXBpLnBlbmRpbmctdmVyaWYiO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=',1788419656);
+INSERT INTO `sessions` VALUES ('4pJQwX2qgQhe5OfOz1gOTvOEzYGeVQU0znEtA4dH',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9168','YTozOntzOjY6Il90b2tlbiI7czo0MDoiVWZoTnNLZ0tCVmNTRWRsR01jNlc2QlJRZFlPZ0J4aGJvaGJqenFxMCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Mjc6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9sb2dpbiI7czo1OiJyb3V0ZSI7czo1OiJsb2dpbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=',1788418738),('Bniwne9S4jIemtp7XOHQn8ZuBv000qUStotGMB2L',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9168','YTozOntzOjY6Il90b2tlbiI7czo0MDoid1MzZGJLMVlLMWVLTUxHMHFkeVd0Vk5zRzdTUGFJTGkzQzBpbDZ3SyI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7czo0OiJob21lIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==',1788418727),('Dk1VQzuScN46aGwQbldEhQ0PFIZ9fKmUSakylJzL',1,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0','YTo0OntzOjY6Il90b2tlbiI7czo0MDoiUkZsenNwd1VMTXAwT2JQTVNGWFFSMGwzRjBibHU4eTdWbDE0VHhXeCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJuZXciO2E6MDp7fXM6Mzoib2xkIjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NDU6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi9hcGkvcGVuZGluZy12ZXJpZiI7czo1OiJyb3V0ZSI7czoyMzoiYWRtaW4uYXBpLnBlbmRpbmctdmVyaWYiO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=',1788422758),('MbCB1npJrFtoT7iWHsnj1MzHSpbb331BnwORez54',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9168','YTozOntzOjY6Il90b2tlbiI7czo0MDoidndOSWg1UFgzSkRoQWRwbGZYWkVaa0hUOHV3a3B3UTZRcnFKeFJPUCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Mjc6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9sb2dpbiI7czo1OiJyb3V0ZSI7czo1OiJsb2dpbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=',1788422736),('MFTigliONwooEJJjK1p2Fl7HzieY1DgnwEo63Quc',1,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0','YTo0OntzOjY6Il90b2tlbiI7czo0MDoienVpYUY0VlltN0ROeGpjSjlwN2RFdnJDcHBVSEhKU1ppdHd3SnpTRiI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NDU6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi9hcGkvcGVuZGluZy12ZXJpZiI7czo1OiJyb3V0ZSI7czoyMzoiYWRtaW4uYXBpLnBlbmRpbmctdmVyaWYiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=',1788374450),('mQDngJH3V4xUHJlFiSQTvReigojCtggTNdmlmiym',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.26100.9168','YTozOntzOjY6Il90b2tlbiI7czo0MDoiZmFNUFNFbmJBSWNlZlBlVEtoR0lqZXlPMG16ZmlOVERPZFk5dnppTiI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Mjg6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9qYWR3YWwiO3M6NToicm91dGUiO3M6MTI6ImphZHdhbC5pbmRleCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=',1788418738),('NTGLAVqMdDISwgfEqAq8eKCTscgE2v0WzBOPjtc8',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0','YTozOntzOjY6Il90b2tlbiI7czo0MDoidnhQaE10NWdxcXh3N1Rwc2I5S2Z6S2ZJaVk3YlBmeGFFRkVkb0ZKaiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJuZXciO2E6MDp7fXM6Mzoib2xkIjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7czo0OiJob21lIjt9fQ==',1788354884);
 /*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -536,4 +586,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-09-03 15:28:42
+-- Dump completed on 2026-09-03 16:18:21
