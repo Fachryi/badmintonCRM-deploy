@@ -1,0 +1,13 @@
+.git
+.github
+node_modules
+vendor
+.env
+.env.backup
+.env.production
+storage/*.key
+tests
+public/storage
+public/hot
+npm-debug.log
+yarn-error.log
