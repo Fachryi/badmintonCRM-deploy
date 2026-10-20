@@ -62,7 +62,20 @@ RUN chown -R user:user /app \
 
 USER user
 
-ENV PORT=7860
+ENV PORT=7860 \
+    APP_NAME="Anbiyaa Sport" \
+    APP_ENV="production" \
+    APP_KEY="base64:2oifJWwG2R4Coo2JUqxDToZIlspMMXdHPs/dAoci8UA=" \
+    APP_DEBUG="false" \
+    APP_URL="https://ekselsaaa-badminton-crm.hf.space" \
+    DB_CONNECTION="mysql" \
+    DB_HOST="gateway01.ap-southeast-1.prod.aws.tidbcloud.com" \
+    DB_PORT="4000" \
+    DB_DATABASE="badmintoncrm" \
+    DB_USERNAME="4XCj1mbSESdLyeT.root" \
+    DB_PASSWORD="1qunSHNnClWA0Uvu" \
+    CACHE_STORE="file" \
+    SESSION_DRIVER="file"
 EXPOSE 7860
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
