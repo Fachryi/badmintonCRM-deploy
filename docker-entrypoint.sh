@@ -1,15 +1,7 @@
 #!/bin/bash
 set -e
 
-# Port binding Render / PaaS (default 80 jika tidak ada $PORT)
-if [ -n "$PORT" ]; then
-    sed -i "s/Listen 80/Listen $PORT/g" /etc/apache2/ports.conf
-    sed -i "s/<VirtualHost \*:80>/<VirtualHost \*:$PORT>/g" /etc/apache2/sites-available/000-default.conf
-fi
-
-# Pastikan kepemilikan dan permission direktori storage dan cache
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+PORT="${PORT:-7860}"
 
 # Bersihkan cache lama agar variabel environment baru dari hosting terbaca
 php artisan config:clear
@@ -27,5 +19,6 @@ fi
 # Jalankan migrasi jika ada struktur baru
 php artisan migrate --force || true
 
-# Jalankan Apache Web Server
-exec apache2-foreground
+# Jalankan Laravel Web Server di port 7860 (standar Hugging Face Spaces)
+echo "Starting Laravel server on port $PORT..."
+exec php artisan serve --host=0.0.0.0 --port="$PORT"
